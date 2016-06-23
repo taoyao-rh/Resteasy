@@ -13,7 +13,8 @@ public class SseConstants
 
    public static final Charset UTF8 = Charset.forName("UTF-8");
 
-  /* public static final byte[] COMMENT_LEAD = ": ".getBytes(UTF8);
+  /* 
+   public static final byte[] COMMENT_LEAD = ": ".getBytes(UTF8);
 
    public static final byte[] NAME_LEAD = "event: ".getBytes(UTF8);
 
@@ -23,7 +24,9 @@ public class SseConstants
 
    public static final byte[] DATA_LEAD = "data: ".getBytes(UTF8);
 
-   public static final byte[] EOL = {'\n'};*/
+   public static final byte[] EOL = {'\n'};
+   */
+   
    public static final byte[] COMMENT_LEAD = ": ".getBytes(StandardCharsets.UTF_8);
    public static final byte[] NAME_LEAD = "    ".getBytes(StandardCharsets.UTF_8);
    public static final byte[] ID_LEAD = "id: ".getBytes(StandardCharsets.UTF_8);

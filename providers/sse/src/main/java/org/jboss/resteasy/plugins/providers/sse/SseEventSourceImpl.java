@@ -47,14 +47,12 @@ public class SseEventSourceImpl implements SseEventSource
 
    private final ConcurrentMap<String, List<Listener>> boundListeners = new ConcurrentHashMap<>();
 
-  
-
    public static class SourceBuilder extends Builder
    {
 
       private WebTarget endpoint = null;
 
-      private long reconnect = 500;
+      private long reconnect = RECONNECT_DEFAULT;
 
       private String name = null;
 
@@ -78,7 +76,7 @@ public class SseEventSourceImpl implements SseEventSource
 
       public SseEventSource open()
       {
-         //TODO: why this api is required ? build can create SseEventSource and this can be invoked against SseEventSource
+         // why this api is required ? build can create SseEventSource and this can be invoked against SseEventSource
          final SseEventSource source = new SseEventSourceImpl(endpoint, name, reconnect, disableKeepAlive, false);
          source.open();
          return source;
@@ -103,6 +101,7 @@ public class SseEventSourceImpl implements SseEventSource
          //TODO: this api should be revised
          return this;
       }
+
       @Override
       public Builder reconnectingEvery(long delay, TimeUnit unit)
       {
@@ -121,7 +120,7 @@ public class SseEventSourceImpl implements SseEventSource
       this(endpoint, null, RECONNECT_DEFAULT, true, open);
    }
 
-   private SseEventSourceImpl(final WebTarget target, final String name, final long reconnectDelay,
+   private SseEventSourceImpl(final WebTarget target, String name, long reconnectDelay,
          final boolean disableKeepAlive, final boolean open)
    {
       if (target == null)
@@ -132,7 +131,10 @@ public class SseEventSourceImpl implements SseEventSource
       this.reconnectDelay = reconnectDelay;
       this.disableKeepAlive = disableKeepAlive;
 
-      final String esName = (name == null) ? createDefaultName(target) : name;
+      if (name == null)
+      {
+         name = String.format("sse-event-source(%s)", target.getUri());
+      }
       this.executor = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
 
       if (open)
@@ -166,31 +168,17 @@ public class SseEventSourceImpl implements SseEventSource
          return t;
       }
    }
-
-   private static String createDefaultName(WebTarget target)
-   {
-      return String.format("sse-event-source(%s)", target.getUri().toASCIIString());
-   }
-
    @Override
    public void open()
    {
       if (!state.compareAndSet(State.READY, State.OPEN))
       {
-         switch (state.get())
-         {
-            case OPEN :
-               throw new IllegalStateException("Event source is already opened");
-            case CLOSED :
-               throw new IllegalStateException("Event source is already closed");
-         }
+         throw new IllegalStateException("EventSource is not ready to open");
       }
 
-      EventHandler processor = new EventHandler(reconnectDelay, null);
-      executor.submit(processor);
-
-      // return only after the first request to the SSE endpoint has been made
-      processor.awaitFirstContact();
+      EventHandler handler = new EventHandler(reconnectDelay, null);
+      executor.submit(handler);
+      handler.awaitConnected();
    }
 
    public boolean isOpen()
@@ -262,7 +250,6 @@ public class SseEventSourceImpl implements SseEventSource
    {
       if (state.getAndSet(State.CLOSED) != State.CLOSED)
       {
-         //TODO:log 
          executor.shutdownNow();
       }
    }
@@ -270,13 +257,10 @@ public class SseEventSourceImpl implements SseEventSource
    private class EventHandler implements Runnable, Listener
    {
 
-      private final CountDownLatch firstContactSignal;
+      private final CountDownLatch connectedLatch;
 
       private String lastEventId;
 
-      /**
-       * Re-connect delay.
-       */
       private long reconnectDelay;
 
       public EventHandler(final long reconnectDelay, final String lastEventId)
@@ -285,18 +269,18 @@ public class SseEventSourceImpl implements SseEventSource
           * Synchronization barrier used to signal that the initial contact with SSE endpoint
           * has been made.
           */
-         this.firstContactSignal = new CountDownLatch(1);
+         this.connectedLatch = new CountDownLatch(1);
 
          this.reconnectDelay = reconnectDelay;
          this.lastEventId = lastEventId;
       }
 
-      private EventHandler(final EventHandler that)
+      private EventHandler(final EventHandler anotherHandler)
       {
-         this.firstContactSignal = null;
+         this.connectedLatch = anotherHandler.connectedLatch;
 
-         this.reconnectDelay = that.reconnectDelay;
-         this.lastEventId = that.lastEventId;
+         this.reconnectDelay = anotherHandler.reconnectDelay;
+         this.lastEventId = anotherHandler.lastEventId;
       }
 
       @Override
@@ -307,20 +291,22 @@ public class SseEventSourceImpl implements SseEventSource
          {
             try
             {
-               final Invocation.Builder request = prepareHandshakeRequest();
+               final Invocation.Builder request = buildRequest();
                if (state.get() == State.OPEN)
                { // attempt to connect only if even source is open
                   eventInput = request.get(SseEventInput.class);
 
                }
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                //TODO:handle this
             }
             finally
             {
-               if (firstContactSignal != null)
+               if (connectedLatch != null)
                {
-                  firstContactSignal.countDown();
+                  connectedLatch.countDown();
                }
             }
 
@@ -330,13 +316,12 @@ public class SseEventSourceImpl implements SseEventSource
             {
                if (eventInput == null || eventInput.isClosed())
                {
-                  scheduleReconnect(reconnectDelay);
+                  reconnect(reconnectDelay);
                   break;
                }
                else
-               {  
-            	  InboundSseEvent event = eventInput.read();
-            	  //TODO:remove this check 
+               {
+                  InboundSseEvent event = eventInput.read();
                   if (event != null)
                   {
                      this.onEvent(event);
@@ -354,7 +339,7 @@ public class SseEventSourceImpl implements SseEventSource
                delay = ex.getRetryTime(requestTime).getTime() - requestTime.getTime();
                delay = (delay > 0) ? delay : 0;
             }
-            scheduleReconnect(delay);
+            reconnect(delay);
          }
          catch (Exception ex)
          {
@@ -377,7 +362,7 @@ public class SseEventSourceImpl implements SseEventSource
          }
       }
 
-      private void scheduleReconnect(final long delay)
+      private void reconnect(final long delay)
       {
          final State s = state.get();
          if (s != State.OPEN)
@@ -396,7 +381,7 @@ public class SseEventSourceImpl implements SseEventSource
          }
       }
 
-      private Invocation.Builder prepareHandshakeRequest()
+      private Invocation.Builder buildRequest()
       {
          final Invocation.Builder request = target.request(MediaType.SERVER_SENT_EVENTS_TYPE);
          if (lastEventId != null && !lastEventId.isEmpty())
@@ -410,67 +395,60 @@ public class SseEventSourceImpl implements SseEventSource
          return request;
       }
 
-      public void awaitFirstContact()
+      public void awaitConnected()
       {
+         if (connectedLatch == null)
+         {
+            return;
+         }
+
          try
          {
-            if (firstContactSignal == null)
-            {
-               return;
-            }
-
-            try
-            {
-               firstContactSignal.await();
-            }
-            catch (InterruptedException ex)
-            {
-               Thread.currentThread().interrupt();
-            }
+            connectedLatch.await();
          }
-         finally
+         catch (InterruptedException ex)
          {
-           //
+            Thread.currentThread().interrupt();
          }
+
       }
 
       @Override
-      public void onEvent(final InboundSseEvent event) {
-          if (event == null) {
-              return;
-          }
-          if (event.getId() != null) {
-              lastEventId = event.getId();
-          }
-          if (event.isReconnectDelaySet()) {
-              reconnectDelay = event.getReconnectDelay();
-          }         
-          final String eventName = event.getName();
-          if (eventName != null) {
-              final List<Listener> eventListeners = boundListeners.get(eventName);
-              if (eventListeners != null) {
-                  notify(eventListeners, event);
-              }
-          }
-          notify(unboundListeners, event);
-      }   
+      public void onEvent(final InboundSseEvent event)
+      {
+         if (event == null)
+         {
+            return;
+         }
+         if (event.getId() != null)
+         {
+            lastEventId = event.getId();
+         }
+         if (event.isReconnectDelaySet())
+         {
+            reconnectDelay = event.getReconnectDelay();
+         }
+         final String eventName = event.getName();
+         if (eventName != null)
+         {
+            final List<Listener> eventListeners = boundListeners.get(eventName);
+            if (eventListeners != null)
+            {
+               notify(eventListeners, event);
+            }
+         }
+         notify(unboundListeners, event);
+      }
 
-      private void notify(final Collection<Listener> listeners, final InboundSseEvent event) {
+      private void notify(final Collection<Listener> listeners, final InboundSseEvent event)
+      {
          if (listeners != null)
          {
             for (Listener listener : listeners)
             {
-               notify(listener, event);
+               listener.onEvent(event);
             }
          }
-      }
-
-      private void notify(final Listener listener, final InboundSseEvent event) {
-          try {
-              listener.onEvent(event);
-          } catch (Exception ex) {
-              //TODO:Log
-          }
       }
    }
 }

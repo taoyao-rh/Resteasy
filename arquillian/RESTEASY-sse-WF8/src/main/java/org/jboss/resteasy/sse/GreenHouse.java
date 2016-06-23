@@ -18,42 +18,53 @@
  */
 package org.jboss.resteasy.sse;
 
-public class GreenHouse  {
-    
-    private long timestamp;
-    private int temperature;
-    private int humidity;
-    
-    public GreenHouse() {
-    }
+public class GreenHouse
+{
 
-    public GreenHouse(long timestamp, int temperature, int humidity) {
-        this.timestamp = timestamp;
-        this.temperature = temperature;
-        this.humidity = humidity;
-    }
+   private long timestamp;
 
-    public long getTimestamp() {
-        return timestamp;
-    }
-    
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
+   private int temperature;
 
-    public int getTempe() {
-        return temperature;
-    }
+   private int humidity;
 
-    public void setTempe(int temperature) {
-        this.temperature = temperature;
-    }
-    
-    public int getHumid() {
-        return humidity;
-    }
+   public GreenHouse()
+   {
+   }
 
-    public void setHumid(int humidity) {
-        this.humidity = humidity;
-    }
+   public GreenHouse(long timestamp, int temperature, int humidity)
+   {
+      this.timestamp = timestamp;
+      this.temperature = temperature;
+      this.humidity = humidity;
+   }
+
+   public long getTimestamp()
+   {
+      return timestamp;
+   }
+
+   public void setTimestamp(long timestamp)
+   {
+      this.timestamp = timestamp;
+   }
+
+   public int getTempe()
+   {
+      return temperature;
+   }
+
+   public void setTempe(int temperature)
+   {
+      this.temperature = temperature;
+   }
+
+   public int getHumid()
+   {
+      return humidity;
+   }
+
+   public void setHumid(int humidity)
+   {
+      this.humidity = humidity;
+   }
 }

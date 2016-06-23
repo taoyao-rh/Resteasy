@@ -20,141 +20,146 @@ import org.jboss.resteasy.plugins.providers.sse.SseContextImpl;
 
 @Path("/server-sent-events")
 @Singleton
-public class SseResource {
+public class SseResource
+{
 
-	private final Object outputLock = new Object();
-	private SseEventOutput sseEventOutput;
-	//TODO: @Inject
-	private SseContext sseContext = new SseContextImpl();
+   private final Object outputLock = new Object();
 
-	public SseResource() {
-	}
+   private SseEventOutput sseEventOutput;
 
-	@GET
-	@Produces(MediaType.SERVER_SENT_EVENTS)
-	public SseEventOutput getMessageQueue() {
-		synchronized (outputLock) {
-			if (sseEventOutput != null) {
-				throw new IllegalStateException("Event output already served.");
-			}
+   //TODO: @Inject
+   private SseContext sseContext = new SseContextImpl();
 
-			sseEventOutput = sseContext.newOutput();
-		}
+   public SseResource()
+   {
+   }
 
-		return sseEventOutput;
-	}
+   @GET
+   @Produces(MediaType.SERVER_SENT_EVENTS)
+   public SseEventOutput getMessageQueue()
+   {
+      synchronized (outputLock)
+      {
+         if (sseEventOutput != null)
+         {
+            throw new IllegalStateException("Event output already served.");
+         }
 
-	@POST
-	public void addMessage(final String message) throws IOException {
-		sseEventOutput.write(sseContext.newEvent().name("custom-message")
-				.data(String.class, message).build());
-	}
+         sseEventOutput = sseContext.newOutput();
+      }
 
-	@DELETE
-	public void close() throws IOException {
-		synchronized (outputLock) {
-			sseEventOutput.close();
-			sseEventOutput = sseContext.newOutput();
-		}
-	}
+      return sseEventOutput;
+   }
 
-	private OutboundSseEvent createStatsEvent(
-			final OutboundSseEvent.Builder builder, final int eventId) {
-		return builder
-				.id("" + eventId)
-				.data(GreenHouse.class,
-						new GreenHouse(new Date().getTime(), 20 + new Random().nextInt(10), 30+20 + new Random().nextInt(10)))
-				.mediaType(MediaType.APPLICATION_JSON_TYPE).build();
-	}
+   @POST
+   public void addMessage(final String message) throws IOException
+   {
+      sseEventOutput.write(sseContext.newEvent().name("custom-message").data(String.class, message).build());
+   }
 
-	@GET
-	@Path("sse/{id}")
-	@Produces("text/event-stream")
-	public SseEventOutput greenHouseStatus(@PathParam("id") final String id) {
-		final SseEventOutput output = sseContext.newOutput();
+   @DELETE
+   public void close() throws IOException
+   {
+      synchronized (outputLock)
+      {
+         sseEventOutput.close();
+         sseEventOutput = sseContext.newOutput();
+      }
+   }
 
-		new Thread() {
-			public void run() {
-				try {
-					output.write(createStatsEvent(
-							sseContext.newEvent().name("greenhouse"), 1));
-					Thread.sleep(1000);
-					output.write(createStatsEvent(
-							sseContext.newEvent().name("greenhouse"), 2));
-					Thread.sleep(1000);
-					output.write(createStatsEvent(
-							sseContext.newEvent().name("greenhouse"), 3));
-					Thread.sleep(1000);
-					output.write(createStatsEvent(
-							sseContext.newEvent().name("greenhouse"), 4));
-					Thread.sleep(1000);
-					output.write(createStatsEvent(
-							sseContext.newEvent().name("greenhouse"), 5));
-					Thread.sleep(1000);
-					output.write(createStatsEvent(
-							sseContext.newEvent().name("greenhouse"), 6));
-					Thread.sleep(1000);
-					output.write(createStatsEvent(
-							sseContext.newEvent().name("greenhouse"), 7));
-					Thread.sleep(1000);
-					output.write(createStatsEvent(
-							sseContext.newEvent().name("greenhouse"), 8));
-					Thread.sleep(1000);
-					output.write(createStatsEvent(
-							sseContext.newEvent().name("greenhouse"), 9));
-					Thread.sleep(1000);
-					output.write(createStatsEvent(
-							sseContext.newEvent().name("greenhouse"), 10));
+   private OutboundSseEvent createStatsEvent(final OutboundSseEvent.Builder builder, final int eventId)
+   {
+      return builder
+            .id("" + eventId)
+            .data(GreenHouse.class,
+                  new GreenHouse(new Date().getTime(), 20 + new Random().nextInt(10), 30 + 20 + new Random()
+                        .nextInt(10))).mediaType(MediaType.APPLICATION_JSON_TYPE).build();
+   }
 
-					output.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}.start();
+   @GET
+   @Path("sse/{id}")
+   @Produces("text/event-stream")
+   public SseEventOutput greenHouseStatus(@PathParam("id") final String id)
+   {
+      final SseEventOutput output = sseContext.newOutput();
 
-		return output;
-	}
+      new Thread()
+      {
+         public void run()
+         {
+            try
+            {
+               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 1));
+               Thread.sleep(1000);
+               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 2));
+               Thread.sleep(1000);
+               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 3));
+               Thread.sleep(1000);
+               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 4));
+               Thread.sleep(1000);
+               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 5));
+               Thread.sleep(1000);
+               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 6));
+               Thread.sleep(1000);
+               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 7));
+               Thread.sleep(1000);
+               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 8));
+               Thread.sleep(1000);
+               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 9));
+               Thread.sleep(1000);
+               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 10));
 
-	@GET
-	@Path("domains/{id}")
-	@Produces(MediaType.SERVER_SENT_EVENTS)
-	public SseEventOutput startDomain(@PathParam("id") final String id) {
-		final SseEventOutput output = sseContext.newOutput();
+               output.close();
+            }
+            catch (Exception e)
+            {
+               e.printStackTrace();
+            }
+         }
+      }.start();
 
-		new Thread() {
-			public void run() {
-				try {
-					output.write(sseContext
-							.newEvent()
-							.name("domain-progress")
-							.data(String.class,
-									"starting domain " + id + " ...").build());
-					Thread.sleep(200);
-					output.write(sseContext.newEvent().name("domain-progress")
-							.data("50%").build());
-					Thread.sleep(200);
-					output.write(sseContext.newEvent().name("domain-progress")
-							.data("60%").build());
-					Thread.sleep(200);
-					output.write(sseContext.newEvent().name("domain-progress")
-							.data("70%").build());
-					Thread.sleep(200);
-					output.write(sseContext.newEvent().name("domain-progress")
-							.data("99%").build());
-					Thread.sleep(200);
-					output.write(sseContext.newEvent().name("domain-progress")
-							.data("Done.").build());
-					output.close();
+      return output;
+   }
 
-				} catch (final InterruptedException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}.start();
+   @GET
+   @Path("domains/{id}")
+   @Produces(MediaType.SERVER_SENT_EVENTS)
+   public SseEventOutput startDomain(@PathParam("id") final String id)
+   {
+      final SseEventOutput output = sseContext.newOutput();
 
-		return output;
-	}
+      new Thread()
+      {
+         public void run()
+         {
+            try
+            {
+               output.write(sseContext.newEvent().name("domain-progress")
+                     .data(String.class, "starting domain " + id + " ...").build());
+               Thread.sleep(200);
+               output.write(sseContext.newEvent().name("domain-progress").data("50%").build());
+               Thread.sleep(200);
+               output.write(sseContext.newEvent().name("domain-progress").data("60%").build());
+               Thread.sleep(200);
+               output.write(sseContext.newEvent().name("domain-progress").data("70%").build());
+               Thread.sleep(200);
+               output.write(sseContext.newEvent().name("domain-progress").data("99%").build());
+               Thread.sleep(200);
+               output.write(sseContext.newEvent().name("domain-progress").data("Done.").build());
+               output.close();
+
+            }
+            catch (final InterruptedException e)
+            {
+               e.printStackTrace();
+            }
+            catch (IOException e)
+            {
+               e.printStackTrace();
+            }
+         }
+      }.start();
+
+      return output;
+   }
 }

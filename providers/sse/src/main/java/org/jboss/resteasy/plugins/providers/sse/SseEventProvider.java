@@ -128,7 +128,6 @@ public class SseEventProvider implements MessageBodyReader<SseEventInput>, Messa
          WebApplicationException
    {
      return new SseEventInputImpl(annotations,mediaType, httpHeaders, entityStream);
-
    }
 
  

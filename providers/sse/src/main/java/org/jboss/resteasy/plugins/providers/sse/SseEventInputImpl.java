@@ -23,8 +23,8 @@ public class SseEventInputImpl implements SseEventInput
    private MultivaluedMap<String, String> httpHeaders;
 
    private InputStream inputStream;
-
-   private static EventReader eventReader = new EventReader();
+   
+   private final byte[] EventEND = "\r\n\r\n".getBytes();
 
    public SseEventInputImpl(Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders,
          InputStream inputStream)
@@ -38,7 +38,6 @@ public class SseEventInputImpl implements SseEventInput
    @Override
    public void close() throws IOException
    {
-      //TODO: handle close;
       this.inputStream.close();
 
    }
@@ -56,7 +55,7 @@ public class SseEventInputImpl implements SseEventInput
       byte[] chunk = null;
       try
       {
-         chunk = eventReader.read(inputStream);
+         chunk = readEvent(inputStream);
          if (chunk == null)
          {
             //close();
@@ -214,5 +213,22 @@ public class SseEventInputImpl implements SseEventInput
          //TODO:Log
       }
    }
-
+   public byte[] readEvent(final InputStream in) throws IOException {
+      final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+      int data;
+      int pos = 0;
+      while ((data = in.read()) != -1) {
+           byte b = (byte)data;
+           if (b == EventEND[pos]) {
+               pos++;
+           } else {
+              pos = 0;
+           }
+           buffer.write(b);
+           if (pos >= EventEND.length) {
+              return buffer.toByteArray();
+           }
+      }
+      return null;
+  } 
 }

@@ -1,8 +1,8 @@
 package org.jboss.resteasy.plugins.providers.sse;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.util.Arrays;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.GenericType;
@@ -43,7 +43,6 @@ public class SseEventOutputImpl extends GenericType<OutboundSseEvent> implements
    @Override
    public void close() throws IOException
    {
-      //TODO：look at if this is enough
       if (request.getAsyncContext().isSuspended() && request.getAsyncContext().getAsyncResponse() != null) {
          if (request.getAsyncContext().isSuspended()) {
             request.getAsyncContext().getAsyncResponse().resume(null);
@@ -55,7 +54,7 @@ public class SseEventOutputImpl extends GenericType<OutboundSseEvent> implements
    @Override
    public void write(OutboundSseEvent event) throws IOException
    { 
-      java.io.ByteArrayOutputStream bout = new java.io.ByteArrayOutputStream();      
+      ByteArrayOutputStream bout = new ByteArrayOutputStream();
       writer.writeTo(event, event.getClass(), null, new Annotation [] {}, event.getMediaType(), null, bout);
       response.getOutputStream().write(bout.toByteArray());
       response.getOutputStream().write(END);

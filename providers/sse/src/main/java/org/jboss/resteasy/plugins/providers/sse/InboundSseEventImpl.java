@@ -27,7 +27,6 @@ public class InboundSseEventImpl implements InboundSseEvent
 
    private final long reconnectDelay;
 
-   //private final MessageBodyWorkers messageBodyWorkers;
    private final Annotation[] annotations;
 
    private final MediaType mediaType;
@@ -109,7 +108,7 @@ public class InboundSseEventImpl implements InboundSseEvent
          }
          catch (IOException ex)
          {
-            // ignore - this is not possible with ByteArrayOutputStream
+            //
          }
          return this;
       }
@@ -130,7 +129,7 @@ public class InboundSseEventImpl implements InboundSseEvent
       this.id = id;
       this.comment = comment;
       this.reconnectDelay = reconnectDelay;
-      this.data = stripLastLineBreak(data);
+      this.data = data;
       this.annotations = annotations;
       this.mediaType = mediaType;
       this.headers = headers;
@@ -197,7 +196,6 @@ public class InboundSseEventImpl implements InboundSseEvent
       final MediaType effectiveMediaType = mediaType == null ? this.mediaType : mediaType;
       final MessageBodyReader reader = ResteasyProviderFactory.getInstance().getMessageBodyReader(type.getRawType(),
             type.getType(), annotations, mediaType);
-      //TODO: i18n log message
       if (reader == null)
       {
          throw new IllegalStateException("");
@@ -220,7 +218,7 @@ public class InboundSseEventImpl implements InboundSseEvent
    }
    public byte[] getRawData()
    {
-      if (isEmpty())
+      if (data.length == 0)
       {
          return data;
       }
@@ -239,21 +237,10 @@ public class InboundSseEventImpl implements InboundSseEvent
       }
       catch (ProcessingException e)
       {
-         s = "<Error reading data into a string>";
+         s = "Exception:" + e.getLocalizedMessage();
       }
 
-      return "InboundSseEvent{" + "name='" + name + '\'' + ", id='" + id + '\'' + ", comment="
-            + (comment == null ? "[no comments]" : '\'' + comment + '\'') + ", data=" + s + '}';
-   }
-
-   private static byte[] stripLastLineBreak(final byte[] data)
-   {
-
-      if (data.length > 0 && data[data.length - 1] == '\n')
-      {
-         return Arrays.copyOf(data, data.length - 1);
-      }
-
-      return data;
+      return "InboundSseEvent{id=" + id + '\'' + ", comment="
+            + (comment == null ? "[]" : '\'' + comment + '\'') + ", data=" + s + '}';
    }
 }
