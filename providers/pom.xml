@@ -26,6 +26,7 @@
                 <module>multipart</module>
                 <module>yaml</module>
                 <module>resteasy-validator-provider-11</module>
+                <module>sse</module>
             </modules>
         </profile>
         <profile>
@@ -45,6 +46,7 @@
                 <module>yaml</module>
                 <module>resteasy-html</module>
                 <module>resteasy-validator-provider-11</module>
+                <module>sse</module>
             </modules>
         </profile>
     </profiles>
