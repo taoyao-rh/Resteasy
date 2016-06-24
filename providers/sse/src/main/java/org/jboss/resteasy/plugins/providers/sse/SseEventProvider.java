@@ -8,11 +8,12 @@ import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
@@ -103,10 +104,9 @@ public class SseEventProvider implements MessageBodyReader<SseEventInput>, Messa
 
             if (writer == null)
             {
-               throw new InternalServerErrorException("No suitable message body writer for class: "
-                     + payloadClass.getName());
+               throw new ServerErrorException("No suitable message body writer for class: "
+                     + payloadClass.getName(), Response.Status.INTERNAL_SERVER_ERROR);
             }
-
             writer.writeTo(event.getData(), payloadClass, payloadType, annotations, event.getMediaType(), httpHeaders,
                   entityStream);
             entityStream.write(SseConstants.EOL);

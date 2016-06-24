@@ -59,10 +59,6 @@ public class ContextParameterInjector implements ValueInjector
                {
                   return null;
                }
-               if (name.equals("getContextResolver"))
-               {
-                   return null;
-               }
                throw new LoggableFailure(Messages.MESSAGES.unableToFindContextualData(type.getName()));
             }
             return method.invoke(delegate, objects);

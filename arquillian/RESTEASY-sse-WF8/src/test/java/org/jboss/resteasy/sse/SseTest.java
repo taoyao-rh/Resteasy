@@ -2,8 +2,8 @@ package org.jboss.resteasy.sse;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -53,7 +53,7 @@ public class SseTest
    public void testSseEvent() throws Exception
    {
 
-      final Set<String> results = new HashSet<String>();
+      final List<String> results = new ArrayList<String>();
       final CountDownLatch latch = new CountDownLatch(6);
       WebTarget target = ClientBuilder.newBuilder().register(SseEventProvider.class).newClient()
             .target("http://localhost:8080" + baseURL.getPath() + "service/server-sent-events").path("domains")
@@ -67,18 +67,18 @@ public class SseTest
          public void onEvent(InboundSseEvent event)
          {
             results.add(event.readData());
-            System.out.println(event.readData());
             latch.countDown();
          }
       });
       eventSource.open();
       target.request().buildPost(null);
-      Assert.assertTrue("Waiting for evet to be delivered has timed out.", latch.await(999999999, TimeUnit.SECONDS));
+      Assert.assertTrue("Waiting for evet to be delivered has timed out.", latch.await(20, TimeUnit.SECONDS));
       eventSource.close();
       Assert.assertTrue("6 SseInboundEvent expected", results.size() == 6);
-      Assert.assertTrue("Expect the last event is Done event", results.toArray(new String[]
+      Assert.assertTrue("Expect the last event is Done event, but it is :" + results.toArray(new String[]
+            {})[5], results.toArray(new String[]
       {})[5].indexOf("Done") > -1);
-
+      //Thread.sleep(6000 * 1000);
    }
 
    @Ignore
