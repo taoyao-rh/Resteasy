@@ -13,6 +13,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.sse.InboundSseEvent;
 
+import org.jboss.resteasy.plugins.providers.sse.i18n.Messages;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 public class InboundSseEventImpl implements InboundSseEvent
@@ -87,10 +88,6 @@ public class InboundSseEventImpl implements InboundSseEvent
 
       public Builder reconnectDelay(long milliseconds)
       {
-         if (milliseconds < 0)
-         {
-            milliseconds = -1;
-         }
          this.reconnectDelay = milliseconds;
          return this;
       }
@@ -108,7 +105,7 @@ public class InboundSseEventImpl implements InboundSseEvent
          }
          catch (IOException ex)
          {
-            //
+            throw new ProcessingException(Messages.MESSAGES.failedToWriteDataToInboudEvent(), ex);
          }
          return this;
       }
@@ -153,6 +150,9 @@ public class InboundSseEventImpl implements InboundSseEvent
 
    public long getReconnectDelay()
    {
+      if (reconnectDelay < 0) {
+         return -1;
+      }
       return reconnectDelay;
    }
 
@@ -198,7 +198,7 @@ public class InboundSseEventImpl implements InboundSseEvent
             type.getType(), annotations, mediaType);
       if (reader == null)
       {
-         throw new IllegalStateException("");
+         throw new IllegalStateException(Messages.MESSAGES.notFoundMBW(type.getClass().getName()));
       }
       return readAndCast(type, effectiveMediaType, reader);
    }
@@ -213,7 +213,7 @@ public class InboundSseEventImpl implements InboundSseEvent
       }
       catch (IOException ex)
       {
-         throw new ProcessingException(ex);
+         throw new ProcessingException(Messages.MESSAGES.failedToReadData(), ex);
       }
    }
    public byte[] getRawData()

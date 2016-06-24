@@ -7,6 +7,8 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.sse.OutboundSseEvent;
 
+import org.jboss.resteasy.plugins.providers.sse.i18n.Messages;
+
 public class OutboundSseEventImpl implements OutboundSseEvent
 {
 
@@ -66,10 +68,9 @@ public class OutboundSseEventImpl implements OutboundSseEvent
 
       public Builder mediaType(final MediaType mediaType)
       {
-         // TODO: jboss logging
          if (mediaType == null)
          {
-            throw new NullPointerException("");
+            throw new IllegalArgumentException(Messages.MESSAGES.nullValueSetToCreateOutboundSseEvent("mediaType"));
          }
          this.mediaType = mediaType;
          return this;
@@ -83,13 +84,13 @@ public class OutboundSseEventImpl implements OutboundSseEvent
 
       public Builder data(Class type, Object data)
       {
-         if (data == null)
-         {
-            throw new NullPointerException("");
-         }
          if (type == null)
          {
-            throw new NullPointerException("");
+            throw new IllegalArgumentException(Messages.MESSAGES.nullValueSetToCreateOutboundSseEvent("type"));
+         }
+         if (data == null)
+         {
+            throw new IllegalArgumentException(Messages.MESSAGES.nullValueSetToCreateOutboundSseEvent("data"));
          }
 
          this.type = new GenericType(type);
@@ -99,13 +100,13 @@ public class OutboundSseEventImpl implements OutboundSseEvent
 
       public Builder data(GenericType type, Object data)
       {
-         if (data == null)
-         {
-            throw new NullPointerException("");
-         }
          if (type == null)
          {
-            throw new NullPointerException("");
+            throw new IllegalArgumentException(Messages.MESSAGES.nullValueSetToCreateOutboundSseEvent("type"));
+         }
+         if (data == null)
+         {
+            throw new IllegalArgumentException(Messages.MESSAGES.nullValueSetToCreateOutboundSseEvent("data"));
          }
 
          this.type = type;
@@ -117,7 +118,7 @@ public class OutboundSseEventImpl implements OutboundSseEvent
       {
          if (data == null)
          {
-            throw new NullPointerException("data is null");
+            throw new IllegalArgumentException(Messages.MESSAGES.nullValueSetToCreateOutboundSseEvent("data"));
          }
 
          GenericType genericType = null;
@@ -135,13 +136,14 @@ public class OutboundSseEventImpl implements OutboundSseEvent
 
       public OutboundSseEvent build()
       {
-         if (comment == null)
+         //TODO:check spec to figure out if this requires
+         /*if (comment == null)
          {
             if ((data == null) && (type == null))
             {
-               throw new IllegalStateException("");
+               throw new IllegalArgumentException(Messages.MESSAGES.nullValueSetToCreateOutboundSseEvent("data and type"));
             }
-         }
+         }*/
 
          return new OutboundSseEventImpl(name, id, reconnectDelay, type, mediaType, data, comment);
       }

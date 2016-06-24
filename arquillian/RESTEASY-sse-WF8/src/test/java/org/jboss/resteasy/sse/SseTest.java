@@ -24,7 +24,7 @@ import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.Assert;
-import org.junit.Ignore;
+//import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -81,7 +81,7 @@ public class SseTest
       //Thread.sleep(6000 * 1000);
    }
 
-   @Ignore
+   @Test
    //This will open a browser and test with html sse client
    public void testHtmlSse() throws Exception
    {

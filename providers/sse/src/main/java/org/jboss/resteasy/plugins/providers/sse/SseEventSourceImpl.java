@@ -1,9 +1,7 @@
 package org.jboss.resteasy.plugins.providers.sse;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -16,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
@@ -24,6 +21,8 @@ import javax.ws.rs.sse.InboundSseEvent;
 import javax.ws.rs.sse.SseEventInput;
 import javax.ws.rs.sse.SseEventSource;
 
+import org.apache.http.HttpHeaders;
+import org.jboss.resteasy.plugins.providers.sse.i18n.Messages;
 public class SseEventSourceImpl implements SseEventSource
 {
 
@@ -120,12 +119,12 @@ public class SseEventSourceImpl implements SseEventSource
       this(endpoint, null, RECONNECT_DEFAULT, true, open);
    }
 
-   private SseEventSourceImpl(final WebTarget target, String name, long reconnectDelay,
-         final boolean disableKeepAlive, final boolean open)
+   private SseEventSourceImpl(final WebTarget target, String name, long reconnectDelay, final boolean disableKeepAlive,
+         final boolean open)
    {
       if (target == null)
       {
-         throw new NullPointerException("WebTarget is 'null'.");
+         throw new IllegalArgumentException(Messages.MESSAGES.webTargetIsNotSetForEventSource());
       }
       this.target = target;
       this.reconnectDelay = reconnectDelay;
@@ -168,12 +167,13 @@ public class SseEventSourceImpl implements SseEventSource
          return t;
       }
    }
+
    @Override
    public void open()
    {
       if (!state.compareAndSet(State.READY, State.OPEN))
       {
-         throw new IllegalStateException("EventSource is not ready to open");
+         throw new IllegalStateException(Messages.MESSAGES.eventSourceIsNotReadyForOpen());
       }
 
       EventHandler handler = new EventHandler(reconnectDelay, null);
@@ -186,6 +186,11 @@ public class SseEventSourceImpl implements SseEventSource
       return state.get() == State.OPEN;
    }
 
+   @Override
+   public void close()
+   {
+      this.close(5, TimeUnit.SECONDS);
+   }
    public void register(final Listener listener)
    {
       register(listener, null);
@@ -222,15 +227,12 @@ public class SseEventSourceImpl implements SseEventSource
    }
 
    @Override
-   public void close()
-   {
-      close(5, TimeUnit.SECONDS);
-   }
-
-   @Override
    public boolean close(final long timeout, final TimeUnit unit)
    {
-      shutdown();
+      if (state.getAndSet(State.CLOSED) != State.CLOSED)
+      {
+         executor.shutdownNow();
+      }
       try
       {
          if (!executor.awaitTermination(timeout, unit))
@@ -246,14 +248,6 @@ public class SseEventSourceImpl implements SseEventSource
       return true;
    }
 
-   private void shutdown()
-   {
-      if (state.getAndSet(State.CLOSED) != State.CLOSED)
-      {
-         executor.shutdownNow();
-      }
-   }
-
    private class EventHandler implements Runnable, Listener
    {
 
@@ -265,10 +259,6 @@ public class SseEventSourceImpl implements SseEventSource
 
       public EventHandler(final long reconnectDelay, final String lastEventId)
       {
-         /**
-          * Synchronization barrier used to signal that the initial contact with SSE endpoint
-          * has been made.
-          */
          this.connectedLatch = new CountDownLatch(1);
 
          this.reconnectDelay = reconnectDelay;
@@ -287,112 +277,30 @@ public class SseEventSourceImpl implements SseEventSource
       public void run()
       {
          SseEventInput eventInput = null;
-         try
-         {
-            try
-            {
-               final Invocation.Builder request = buildRequest();
-               if (state.get() == State.OPEN)
-               { // attempt to connect only if even source is open
-                  eventInput = request.get(SseEventInput.class);
 
-               }
-            }
-            catch (Exception e)
+         final Invocation.Builder request = buildRequest();
+         if (state.get() == State.OPEN)
+         {
+            eventInput = request.get(SseEventInput.class);
+
+         }
+
+         while (state.get() == State.OPEN)
+         {
+            if (eventInput == null || eventInput.isClosed())
             {
-               //TODO:handle this
+               reconnect(reconnectDelay);
+               break;
             }
-            finally
+            else
             {
-               if (connectedLatch != null)
+               InboundSseEvent event = eventInput.read();
+               if (event != null)
                {
-                  connectedLatch.countDown();
-               }
-            }
-
-            final Thread execThread = Thread.currentThread();
-
-            while (state.get() == State.OPEN && !execThread.isInterrupted())
-            {
-               if (eventInput == null || eventInput.isClosed())
-               {
-                  reconnect(reconnectDelay);
-                  break;
-               }
-               else
-               {
-                  InboundSseEvent event = eventInput.read();
-                  if (event != null)
-                  {
-                     this.onEvent(event);
-                  }
+                  onEvent(event);
                }
             }
          }
-         catch (ServiceUnavailableException ex)
-         {
-
-            long delay = reconnectDelay;
-            if (ex.hasRetryAfter())
-            {
-               final Date requestTime = new Date();
-               delay = ex.getRetryTime(requestTime).getTime() - requestTime.getTime();
-               delay = (delay > 0) ? delay : 0;
-            }
-            reconnect(delay);
-         }
-         catch (Exception ex)
-         {
-            ex.printStackTrace();
-            shutdown();
-         }
-         finally
-         {
-            if (eventInput != null && !eventInput.isClosed())
-            {
-               try
-               {
-                  eventInput.close();
-               }
-               catch (IOException e)
-               {
-                  //
-               }
-            }
-         }
-      }
-
-      private void reconnect(final long delay)
-      {
-         final State s = state.get();
-         if (s != State.OPEN)
-         {
-            return;
-         }
-
-         final EventHandler processor = new EventHandler(this);
-         if (delay > 0)
-         {
-            executor.schedule(processor, delay, TimeUnit.MILLISECONDS);
-         }
-         else
-         {
-            executor.submit(processor);
-         }
-      }
-
-      private Invocation.Builder buildRequest()
-      {
-         final Invocation.Builder request = target.request(MediaType.SERVER_SENT_EVENTS_TYPE);
-         if (lastEventId != null && !lastEventId.isEmpty())
-         {
-            request.header(SseConstants.LAST_EVENT_ID_HEADER, lastEventId);
-         }
-         if (disableKeepAlive)
-         {
-            request.header("Connection", "close");
-         }
-         return request;
       }
 
       public void awaitConnected()
@@ -440,6 +348,20 @@ public class SseEventSourceImpl implements SseEventSource
          notify(unboundListeners, event);
       }
 
+      private Invocation.Builder buildRequest()
+      {
+         final Invocation.Builder request = target.request(MediaType.SERVER_SENT_EVENTS_TYPE);
+         if (lastEventId != null && !lastEventId.isEmpty())
+         {
+            request.header(SseConstants.LAST_EVENT_ID_HEADER, lastEventId);
+         }
+         if (disableKeepAlive)
+         {
+            request.header(HttpHeaders.CONNECTION, "close");
+         }
+         return request;
+      }
+
       private void notify(final Collection<Listener> listeners, final InboundSseEvent event)
       {
          if (listeners != null)
@@ -448,6 +370,24 @@ public class SseEventSourceImpl implements SseEventSource
             {
                listener.onEvent(event);
             }
+         }
+      }
+
+      private void reconnect(final long delay)
+      {
+         if (state.get() != State.OPEN)
+         {
+            return;
+         }
+
+         EventHandler processor = new EventHandler(this);
+         if (delay > 0)
+         {
+            executor.schedule(processor, delay, TimeUnit.MILLISECONDS);
+         }
+         else
+         {
+            executor.submit(processor);
          }
       }
    }

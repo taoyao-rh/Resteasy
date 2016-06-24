@@ -6,6 +6,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
@@ -13,6 +14,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.sse.OutboundSseEvent;
 import javax.ws.rs.sse.SseEventOutput;
 
+import org.jboss.resteasy.plugins.providers.sse.i18n.Messages;
 import org.jboss.resteasy.plugins.server.servlet.Servlet3AsyncHttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.HttpHeaderNames;
@@ -29,7 +31,7 @@ public class SseEventOutputImpl extends GenericType<OutboundSseEvent> implements
    public SseEventOutputImpl(final MessageBodyWriter<OutboundSseEvent> writer) {
       Object req = ResteasyProviderFactory.getContextData(org.jboss.resteasy.spi.HttpRequest.class);
       if (!(req instanceof Servlet3AsyncHttpRequest)) {
-          throw new javax.ws.rs.ServerErrorException("Sse feature requries HttpServlet30Dispatcher", Status.INTERNAL_SERVER_ERROR);
+          throw new ServerErrorException(Messages.MESSAGES.asyncServletIsRequired(), Status.INTERNAL_SERVER_ERROR);
       }
       request = (Servlet3AsyncHttpRequest)req;
       

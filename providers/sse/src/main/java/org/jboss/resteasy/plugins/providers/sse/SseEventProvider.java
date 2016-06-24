@@ -20,6 +20,7 @@ import javax.ws.rs.ext.Provider;
 import javax.ws.rs.sse.OutboundSseEvent;
 import javax.ws.rs.sse.SseEventInput;
 
+import org.jboss.resteasy.plugins.providers.sse.i18n.Messages;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 @Provider
@@ -104,9 +105,9 @@ public class SseEventProvider implements MessageBodyReader<SseEventInput>, Messa
 
             if (writer == null)
             {
-               throw new ServerErrorException("No suitable message body writer for class: "
-                     + payloadClass.getName(), Response.Status.INTERNAL_SERVER_ERROR);
+               throw new ServerErrorException(Messages.MESSAGES.notFoundMBW(payloadClass.getName()), Response.Status.INTERNAL_SERVER_ERROR);
             }
+
             writer.writeTo(event.getData(), payloadClass, payloadType, annotations, event.getMediaType(), httpHeaders,
                   entityStream);
             entityStream.write(SseConstants.EOL);

@@ -13,6 +13,9 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.sse.InboundSseEvent;
 import javax.ws.rs.sse.SseEventInput;
 
+import org.jboss.resteasy.plugins.providers.sse.i18n.LogMessages;
+import org.jboss.resteasy.plugins.providers.sse.i18n.Messages;
+
 public class SseEventInputImpl implements SseEventInput
 {
 
@@ -25,6 +28,8 @@ public class SseEventInputImpl implements SseEventInput
    private InputStream inputStream;
    
    private final byte[] EventEND = "\r\n\r\n".getBytes();
+   
+   private boolean isClosed = false;
 
    public SseEventInputImpl(Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders,
          InputStream inputStream)
@@ -39,14 +44,14 @@ public class SseEventInputImpl implements SseEventInput
    public void close() throws IOException
    {
       this.inputStream.close();
+      isClosed = true;
 
    }
 
    @Override
    public boolean isClosed()
    {
-      //TODO: we need a state to log the close state
-      return false;
+      return isClosed;
    }
 
    @Override
@@ -56,16 +61,16 @@ public class SseEventInputImpl implements SseEventInput
       try
       {
          chunk = readEvent(inputStream);
-         if (chunk == null)
-         {
-            //close();
-            return null;
-         }
       }
       catch (IOException e1)
       {
-         e1.printStackTrace();
+         throw new RuntimeException(Messages.MESSAGES.readEventException(), e1);
       }
+      if (chunk == null)
+      {
+         return null;
+      }
+      
 
       final ByteArrayInputStream entityStream = new ByteArrayInputStream(chunk);
       final ByteArrayOutputStream tokenData = new ByteArrayOutputStream();
@@ -112,15 +117,14 @@ public class SseEventInputImpl implements SseEventInput
                   }
                   break;
                case COMMENT :
-                  // skipping comment data
-                  b = readLineUntil(entityStream, '\n', tokenData);
+                  b = readLine(entityStream, '\n', tokenData);
                   final String commentLine = tokenData.toString(charset.toString());
                   tokenData.reset();
-                  eventBuilder.commentLine(commentLine.trim());
+                  eventBuilder.commentLine(commentLine);
                   currentState = SseConstants.State.NEW_LINE;
                   break;
                case FIELD :
-                  b = readLineUntil(entityStream, ':', tokenData);
+                  b = readLine(entityStream, ':', tokenData);
                   final String fieldName = tokenData.toString(charset.toString());
                   tokenData.reset();
 
@@ -135,7 +139,7 @@ public class SseEventInputImpl implements SseEventInput
                      if (b != '\n' && b != '\r' && b != -1)
                      {
                         tokenData.write(b);
-                        b = readLineUntil(entityStream, '\n', tokenData);
+                        b = readLine(entityStream, '\n', tokenData);
                      }
                   }
 
@@ -151,13 +155,13 @@ public class SseEventInputImpl implements SseEventInput
       }
       catch (IOException e)
       {
-         throw new IllegalStateException(e);
+         throw new RuntimeException(Messages.MESSAGES.readEventException(), e);
       }
       return eventBuilder.build();
 
    }
 
-   private int readLineUntil(final InputStream in, final int delimiter, final OutputStream out) throws IOException
+   private int readLine(final InputStream in, final int delimiter, final OutputStream out) throws IOException
    {
       int b;
       while ((b = in.read()) != -1)
@@ -205,12 +209,12 @@ public class SseEventInputImpl implements SseEventInput
          }
          catch (final NumberFormatException ex)
          {
-            //TODO:log
+            LogMessages.LOGGER.skipIllegalField("retry", valueString);
          }
       }
       else
       {
-         //TODO:Log
+         LogMessages.LOGGER.skipUnkownFiled(name);
       }
    }
    public byte[] readEvent(final InputStream in) throws IOException {
