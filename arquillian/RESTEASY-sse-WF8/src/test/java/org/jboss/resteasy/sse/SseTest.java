@@ -8,6 +8,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.sse.InboundSseEvent;
 import javax.ws.rs.sse.SseEventSource.Listener;
@@ -24,6 +25,7 @@ import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.Assert;
+import org.junit.Ignore;
 //import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,9 +52,42 @@ public class SseTest
    }
 
    @Test
+   public void testAddMessage() throws Exception
+   {
+      final CountDownLatch latch = new CountDownLatch(5);
+      final List<String> results = new ArrayList<String>();
+      WebTarget target = ClientBuilder.newBuilder().register(SseEventProvider.class).newClient()
+            .target("http://localhost:8080" + baseURL.getPath() + "service/server-sent-events");
+
+      SseEventSourceImpl.SourceBuilder builder = new SseEventSourceImpl.SourceBuilder(target);
+
+      SseEventSourceImpl eventSource = (SseEventSourceImpl) builder.build();
+      eventSource.register(new Listener()
+      {
+         @Override
+         public void onEvent(InboundSseEvent event)
+         {
+            results.add(event.toString()); 
+            latch.countDown();
+         }
+      });
+
+      eventSource.open();
+
+      WebTarget targetPost = ClientBuilder.newBuilder().register(SseEventProvider.class).newClient()
+            .target("http://localhost:8080" + baseURL.getPath() + "service/server-sent-events");
+      for (int counter = 0; counter < 5; counter++)
+      {
+         targetPost.request().post(Entity.text("message " + counter));
+      }
+       
+      Assert.assertTrue("Waiting for evet to be delivered has timed out.", latch.await(10, TimeUnit.SECONDS));
+      eventSource.close();
+      Assert.assertTrue("5 messages are expected", results.size() == 5);
+   }
+   @Test
    public void testSseEvent() throws Exception
    {
-
       final List<String> results = new ArrayList<String>();
       final CountDownLatch latch = new CountDownLatch(6);
       WebTarget target = ClientBuilder.newBuilder().register(SseEventProvider.class).newClient()
@@ -72,19 +107,19 @@ public class SseTest
       });
       eventSource.open();
       target.request().buildPost(null);
-      Assert.assertTrue("Waiting for evet to be delivered has timed out.", latch.await(20, TimeUnit.SECONDS));
+      Assert.assertTrue("Waiting for evet to be delivered has timed out.", latch.await(10, TimeUnit.SECONDS));
       eventSource.close();
       Assert.assertTrue("6 SseInboundEvent expected", results.size() == 6);
       Assert.assertTrue("Expect the last event is Done event, but it is :" + results.toArray(new String[]
             {})[5], results.toArray(new String[]
       {})[5].indexOf("Done") > -1);
-      //Thread.sleep(6000 * 1000);
    }
 
-   @Test
+   @Ignore
    //This will open a browser and test with html sse client
    public void testHtmlSse() throws Exception
    {
+      
       Runtime runtime = Runtime.getRuntime();
       try
       {
@@ -94,6 +129,6 @@ public class SseTest
       {
 
       }
-      Thread.sleep(60 * 1000);
+      Thread.sleep(30 * 1000);
    }
 }

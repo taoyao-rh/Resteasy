@@ -9,10 +9,12 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class SseApplication extends Application
 {
-   public Set<Class<?>> getClasses()
+   private Set<Object> singletons = new HashSet<Object>();
+
+   public Set<Object> getSingletons()
    {
-      HashSet<Class<?>> classes = new HashSet<Class<?>>();
-      classes.add(SseResource.class);
-      return classes;
+      singletons.add(new SseResource());
+      return singletons;
    }
+
 }

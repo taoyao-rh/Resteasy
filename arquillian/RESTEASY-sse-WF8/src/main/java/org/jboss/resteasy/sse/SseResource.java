@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Random;
 
-import javax.inject.Singleton;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -19,7 +18,6 @@ import javax.ws.rs.sse.SseEventOutput;
 import org.jboss.resteasy.plugins.providers.sse.SseContextImpl;
 
 @Path("/server-sent-events")
-@Singleton
 public class SseResource
 {
 
