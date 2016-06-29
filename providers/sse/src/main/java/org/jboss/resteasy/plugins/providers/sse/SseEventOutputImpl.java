@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.sse.OutboundSseEvent;
@@ -50,7 +51,10 @@ public class SseEventOutputImpl extends GenericType<OutboundSseEvent> implements
    {
       if (request.getAsyncContext().isSuspended() && request.getAsyncContext().getAsyncResponse() != null) {
          if (request.getAsyncContext().isSuspended()) {
-            request.getAsyncContext().getAsyncResponse().resume(null);
+            //resume(null) will call into AbstractAsynchronousResponse.internalResume(Throwable exc)
+            //The null is valid reference for Throwable:http://stackoverflow.com/questions/17576922/why-can-i-throw-null-in-java
+            //Response header will be set with original one
+            request.getAsyncContext().getAsyncResponse().resume(Response.noContent().build());
          }
       }
       closed = true;
