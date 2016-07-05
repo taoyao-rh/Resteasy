@@ -229,8 +229,13 @@ public class SseEventInputImpl implements SseEventInput
               pos = 0;
            }
            buffer.write(b);
-           if (pos >= EventEND.length) {
+           if (pos >= EventEND.length && buffer.toByteArray().length > EventEND.length) {
               return buffer.toByteArray();
+           }
+           if (pos >= EventEND.length && buffer.toByteArray().length == EventEND.length) {
+              pos = 0;
+              buffer.reset();
+              continue;
            }
       }
       return null;

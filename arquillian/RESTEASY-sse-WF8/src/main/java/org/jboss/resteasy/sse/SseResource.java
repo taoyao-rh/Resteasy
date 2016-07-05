@@ -31,19 +31,35 @@ public class SseResource
    public SseResource()
    {
    }
+   @GET
+   @Path("single")
+   @Produces(MediaType.SERVER_SENT_EVENTS)
+   public SseEventOutput getMessageQueueSingle() {
+      synchronized (outputLock) {       
+            sseEventOutput = sseContext.newOutput();
+      }
+      try {
+         OutboundSseEvent.Builder builder = sseContext.newEvent();
+         builder.name("MessageQueueSingle inited sseEventOutput");
+         builder.comment("single event is added");
+         builder.data("single");
+         sseEventOutput.write(builder.build());
+      } catch (Exception e) {
+         System.out.println(e);
+      }
 
+      return sseEventOutput;
+   }
    @GET
    @Produces(MediaType.SERVER_SENT_EVENTS)
    public SseEventOutput getMessageQueue()
    {
       synchronized (outputLock)
       {
-         if (sseEventOutput != null)
+         if (sseEventOutput == null)
          {
-            throw new IllegalStateException("Event output already served.");
+            sseEventOutput = sseContext.newOutput();
          }
-
-         sseEventOutput = sseContext.newOutput();
       }
 
       return sseEventOutput;
@@ -52,6 +68,9 @@ public class SseResource
    @POST
    public void addMessage(final String message) throws IOException
    {
+      if(sseEventOutput == null) {
+         return;
+      }
       sseEventOutput.write(sseContext.newEvent().name("custom-message").data(String.class, message).build());
    }
 

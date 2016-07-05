@@ -6,6 +6,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -44,8 +45,18 @@ public class SseEventOutputImpl extends GenericType<OutboundSseEvent> implements
       response =  ResteasyProviderFactory.getContextData(HttpServletResponse.class); 
       contextDataMap = ResteasyProviderFactory.getContextDataMap();
       response.setHeader(HttpHeaderNames.CONTENT_TYPE, MediaType.SERVER_SENT_EVENTS);
+      //set back to client 200 OK to implies the SseEventOutput is ready
+      try
+      {
+         response.getOutputStream().write(END);
+         response.flushBuffer();
+      }
+      catch (IOException e)
+      {
+         throw new ProcessingException(Messages.MESSAGES.failedToCreateSseEventOutput(), e);
+      }
+      
    }
-  
    @Override
    public void close() throws IOException
    {
@@ -62,15 +73,19 @@ public class SseEventOutputImpl extends GenericType<OutboundSseEvent> implements
 
    @Override
    public void write(OutboundSseEvent event) throws IOException
-   { 
+   {
       ResteasyProviderFactory.pushContextDataMap(contextDataMap);
-      ByteArrayOutputStream bout = new ByteArrayOutputStream();
-      writer.writeTo(event, event.getClass(), null, new Annotation [] {}, event.getMediaType(), null, bout);
-      response.getOutputStream().write(bout.toByteArray());
+      if (event != null)
+      {
+         ByteArrayOutputStream bout = new ByteArrayOutputStream();
+         writer.writeTo(event, event.getClass(), null, new Annotation[]
+         {}, event.getMediaType(), null, bout);
+         response.getOutputStream().write(bout.toByteArray());
+      }
       response.getOutputStream().write(END);
       response.flushBuffer();
    }
-
+   
    @Override
    public boolean isClosed()
    {

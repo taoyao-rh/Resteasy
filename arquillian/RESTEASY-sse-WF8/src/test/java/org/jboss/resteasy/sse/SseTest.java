@@ -11,13 +11,13 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.sse.InboundSseEvent;
+import javax.ws.rs.sse.SseEventInput;
 import javax.ws.rs.sse.SseEventSource.Listener;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.resteasy.plugins.providers.sse.SseEventProvider;
 import org.jboss.resteasy.plugins.providers.sse.SseEventSourceImpl;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -25,7 +25,6 @@ import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.Assert;
-import org.junit.Ignore;
 //import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,13 +49,37 @@ public class SseTest
             .addAsWebResource("index.html").addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml");
       return war1;
    }
+   
+   @Test
+   public void testSingleSseEventInput() throws Exception {
+      WebTarget target = ClientBuilder
+         .newBuilder()
+         .build()
+         .target("http://localhost:8080" + baseURL.getPath() + "service/server-sent-events")
+         .path("single");
+      SseEventInput eventInput = target.request().get(SseEventInput.class);
+      Assert.assertNotNull("SseEventInput is null", eventInput);
+      if (!eventInput.isClosed()) {
+         InboundSseEvent inboundEvent = eventInput.read();
+         Assert.assertTrue(inboundEvent.getComment().indexOf("single event is added") > -1);
+     }
+   }
 
+   @Test
+   public void testEmptySseEventInput() throws Exception {
+      WebTarget target = ClientBuilder
+         .newBuilder()
+         .build()
+         .target("http://localhost:8080" + baseURL.getPath() + "service/server-sent-events");
+      SseEventInput eventInput = target.request().get(SseEventInput.class);
+      Assert.assertNotNull("SseEventInput is null", eventInput);   
+   }
    @Test
    public void testAddMessage() throws Exception
    {
       final CountDownLatch latch = new CountDownLatch(5);
       final List<String> results = new ArrayList<String>();
-      WebTarget target = ClientBuilder.newBuilder().register(SseEventProvider.class).newClient()
+      WebTarget target = ClientBuilder.newBuilder().build()
             .target("http://localhost:8080" + baseURL.getPath() + "service/server-sent-events");
 
       SseEventSourceImpl.SourceBuilder builder = new SseEventSourceImpl.SourceBuilder(target);
@@ -67,14 +90,14 @@ public class SseTest
          @Override
          public void onEvent(InboundSseEvent event)
          {
-            results.add(event.toString()); 
+            results.add(event.toString());
             latch.countDown();
          }
       });
 
       eventSource.open();
 
-      WebTarget targetPost = ClientBuilder.newBuilder().register(SseEventProvider.class).newClient()
+      WebTarget targetPost = ClientBuilder.newBuilder().build()
             .target("http://localhost:8080" + baseURL.getPath() + "service/server-sent-events");
       for (int counter = 0; counter < 5; counter++)
       {
@@ -90,7 +113,7 @@ public class SseTest
    {
       final List<String> results = new ArrayList<String>();
       final CountDownLatch latch = new CountDownLatch(6);
-      WebTarget target = ClientBuilder.newBuilder().register(SseEventProvider.class).newClient()
+      WebTarget target = ClientBuilder.newBuilder().build()
             .target("http://localhost:8080" + baseURL.getPath() + "service/server-sent-events").path("domains")
             .path("1");
       SseEventSourceImpl.SourceBuilder builder = new SseEventSourceImpl.SourceBuilder(target);
@@ -115,7 +138,7 @@ public class SseTest
       {})[5].indexOf("Done") > -1);
    }
 
-   @Ignore
+   @Test
    //This will open a browser and test with html sse client
    public void testHtmlSse() throws Exception
    {

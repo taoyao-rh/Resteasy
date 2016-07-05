@@ -5,10 +5,7 @@ import org.jboss.logging.annotations.MessageBundle;
 
 /**
  * 
- * @author <a href="ron.sigal@jboss.com">Ron Sigal</a>
- * @version $Revision: 1.1 $
  * 
- * Copyright October 2, 2014
  */
 @MessageBundle(projectCode = "RESTEASY")
 public interface Messages
@@ -33,5 +30,7 @@ public interface Messages
    String notFoundMBR(String className);
    @Message(id = BASE + 8, value = "Failed to read data from InboundSseEvent")
    String failedToReadData();
+   @Message(id = BASE + 9, value = "Failed to create SseEventOutput")
+   String failedToCreateSseEventOutput();
 
 }

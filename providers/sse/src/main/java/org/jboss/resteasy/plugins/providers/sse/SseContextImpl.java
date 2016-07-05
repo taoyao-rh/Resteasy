@@ -8,11 +8,14 @@ import javax.ws.rs.sse.SseEventOutput;
 public class SseContextImpl implements SseContext
 {
    private SseEventProvider writer = new SseEventProvider();
+   private SseEventOutputProvider eventWriter = new SseEventOutputProvider();
 
    @Override
    public SseEventOutput newOutput()
    {
-      return new SseEventOutputImpl(writer);
+      SseEventOutput output = new SseEventOutputImpl(writer);
+      
+      return output;
    }
 
    @Override
