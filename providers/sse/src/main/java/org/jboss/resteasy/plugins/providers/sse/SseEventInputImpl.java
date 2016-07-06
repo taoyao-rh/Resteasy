@@ -26,9 +26,9 @@ public class SseEventInputImpl implements SseEventInput
    private MultivaluedMap<String, String> httpHeaders;
 
    private InputStream inputStream;
-   
+
    private final byte[] EventEND = "\r\n\r\n".getBytes();
-   
+
    private boolean isClosed = false;
 
    public SseEventInputImpl(Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders,
@@ -70,10 +70,9 @@ public class SseEventInputImpl implements SseEventInput
       {
          return null;
       }
-      
 
       final ByteArrayInputStream entityStream = new ByteArrayInputStream(chunk);
-      final ByteArrayOutputStream tokenData = new ByteArrayOutputStream();
+      final ByteArrayOutputStream temSave = new ByteArrayOutputStream();
       Charset charset = SseConstants.UTF8;
       if (mediaType != null && mediaType.getParameters().get(MediaType.CHARSET_PARAMETER) != null)
       {
@@ -82,83 +81,76 @@ public class SseEventInputImpl implements SseEventInput
       final InboundSseEventImpl.Builder eventBuilder = new InboundSseEventImpl.Builder(annotations, mediaType,
             httpHeaders);
       int b = -1;
-      SseConstants.State currentState = SseConstants.State.NEW_LINE;
-      try
+      SseConstants.EVENT currentState = SseConstants.EVENT.START;
+      while ((b = entityStream.read()) != -1)
       {
-         loop : do
+         
+         try
          {
-            switch (currentState)
+            if (currentState == SseConstants.EVENT.START)
             {
-               case NEW_LINE :
-                  if (b == '\r')
+               if (b == '\r' ||b == '\n')
+               {
+                  continue;
+               }
+               
+               if (b == ':')
+               {
+                  currentState = SseConstants.EVENT.COMMENT;
+                  continue;
+               }
+               else
+               {
+                  temSave.write(b);
+                  currentState = SseConstants.EVENT.FIELD;
+                  continue;
+               }
+            }
+            if (currentState == SseConstants.EVENT.COMMENT)
+            {
+
+               b = readLine(entityStream, '\n', temSave);
+               String commentLine = temSave.toString(charset.toString());               
+               eventBuilder.commentLine(commentLine);
+               temSave.reset();
+               currentState = SseConstants.EVENT.START;
+               continue;
+            }
+            if (currentState == SseConstants.EVENT.FIELD)
+            {
+               temSave.write(b);
+               b = readLine(entityStream, ':', temSave);
+               String fieldName = temSave.toString(charset.toString());
+               temSave.reset();
+               if (b == ':')
+               {
+                  //space after the colon is ignored
+                  do
                   {
                      b = entityStream.read();
-
-                     b = b == '\n' ? entityStream.read() : b;
                   }
-                  else
+                  while (b == ' ');
+
+                  if (b != '\n' && b != '\r' && b != -1)
                   {
-                     b = entityStream.read();
+                     temSave.write(b);
+                     b = readLine(entityStream, '\n', temSave);
                   }
+               }
 
-                  if (b == '\n' || b == '\r' || b == -1)
-                  {
-                     break loop;
-                  }
-
-                  if (b == ':')
-                  {
-                     currentState = SseConstants.State.COMMENT;
-                  }
-                  else
-                  {
-                     tokenData.write(b);
-                     currentState = SseConstants.State.FIELD;
-                  }
-                  break;
-               case COMMENT :
-                  b = readLine(entityStream, '\n', tokenData);
-                  final String commentLine = tokenData.toString(charset.toString());
-                  tokenData.reset();
-                  eventBuilder.commentLine(commentLine);
-                  currentState = SseConstants.State.NEW_LINE;
-                  break;
-               case FIELD :
-                  b = readLine(entityStream, ':', tokenData);
-                  final String fieldName = tokenData.toString(charset.toString());
-                  tokenData.reset();
-
-                  if (b == ':')
-                  {
-                     do
-                     {
-                        b = entityStream.read();
-                     }
-                     while (b == ' ');
-
-                     if (b != '\n' && b != '\r' && b != -1)
-                     {
-                        tokenData.write(b);
-                        b = readLine(entityStream, '\n', tokenData);
-                     }
-                  }
-
-                  processField(eventBuilder, fieldName, mediaType, tokenData.toByteArray());
-                  tokenData.reset();
-
-                  currentState = SseConstants.State.NEW_LINE;
-                  break;
+               processField(eventBuilder, fieldName, mediaType, temSave.toByteArray());
+               temSave.reset();
+               currentState = SseConstants.EVENT.START;
+               continue;
             }
          }
+         catch (IOException e)
+         {
+            throw new RuntimeException(Messages.MESSAGES.readEventException(), e);
+         }
 
-         while (b != -1);
-      }
-      catch (IOException e)
-      {
-         throw new RuntimeException(Messages.MESSAGES.readEventException(), e);
       }
       return eventBuilder.build();
-
    }
 
    private int readLine(final InputStream in, final int delimiter, final OutputStream out) throws IOException
@@ -188,9 +180,9 @@ public class SseEventInputImpl implements SseEventInput
          charset = Charset.forName(mediaType.getParameters().get(MediaType.CHARSET_PARAMETER));
       }
       String valueString = new String(value, charset);
-      if (name.startsWith("    "))
+      if ("event".equals(name))
       {
-         inboundEventBuilder.name(name.substring(4));
+         inboundEventBuilder.name(valueString);
       }
       else if ("data".equals(name))
       {
@@ -217,27 +209,37 @@ public class SseEventInputImpl implements SseEventInput
          LogMessages.LOGGER.skipUnkownFiled(name);
       }
    }
-   public byte[] readEvent(final InputStream in) throws IOException {
-      final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+   public byte[] readEvent(final InputStream in) throws IOException
+   {
+      @SuppressWarnings("resource")
+      EventByteArrayOutputStream buffer = new EventByteArrayOutputStream();
       int data;
       int pos = 0;
-      while ((data = in.read()) != -1) {
-           byte b = (byte)data;
-           if (b == EventEND[pos]) {
-               pos++;
-           } else {
-              pos = 0;
-           }
-           buffer.write(b);
-           if (pos >= EventEND.length && buffer.toByteArray().length > EventEND.length) {
-              return buffer.toByteArray();
-           }
-           if (pos >= EventEND.length && buffer.toByteArray().length == EventEND.length) {
-              pos = 0;
-              buffer.reset();
-              continue;
-           }
+      while ((data = in.read()) != -1)
+      {
+         byte b = (byte) data;
+         if (b == EventEND[pos])
+         {
+            pos++;
+         }
+         else
+         {
+            pos = 0;
+         }
+         buffer.write(b);
+         if (pos >= EventEND.length && buffer.toByteArray().length > EventEND.length)
+         {
+            return buffer.getEventPayLoad();
+         }
+         if (pos >= EventEND.length && buffer.toByteArray().length == EventEND.length)
+         {
+            pos = 0;
+            buffer.reset();
+            continue;
+         }
       }
+
       return null;
-  } 
+   }
 }

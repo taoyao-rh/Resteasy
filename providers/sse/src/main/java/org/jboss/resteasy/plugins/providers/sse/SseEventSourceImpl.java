@@ -287,7 +287,7 @@ public class SseEventSourceImpl implements SseEventSource
 
          while (state.get() == State.OPEN)
          {
-            if (eventInput == null || eventInput.isClosed())
+            if (eventInput.isClosed())
             {
                reconnect(reconnectDelay);
                break;

@@ -8,33 +8,16 @@ import javax.ws.rs.core.GenericType;
 public class SseConstants
 {
    public static final String LAST_EVENT_ID_HEADER = "Last-Event-ID";
-
    public static final GenericType<String> STRING_AS_GENERIC_TYPE = new GenericType<>(String.class);
-
-   public static final Charset UTF8 = Charset.forName("UTF-8");
-
-  /* 
-   public static final byte[] COMMENT_LEAD = ": ".getBytes(UTF8);
-
-   public static final byte[] NAME_LEAD = "event: ".getBytes(UTF8);
-
-   public static final byte[] ID_LEAD = "id: ".getBytes(UTF8);
-
-   public static final byte[] RETRY_LEAD = "retry: ".getBytes(UTF8);
-
-   public static final byte[] DATA_LEAD = "data: ".getBytes(UTF8);
-
-   public static final byte[] EOL = {'\n'};
-   */
-   
+   public static final Charset UTF8 = Charset.forName("UTF-8");   
    public static final byte[] COMMENT_LEAD = ": ".getBytes(StandardCharsets.UTF_8);
-   public static final byte[] NAME_LEAD = "    ".getBytes(StandardCharsets.UTF_8);
+   public static final byte[] NAME_LEAD = "event: ".getBytes(UTF8);
    public static final byte[] ID_LEAD = "id: ".getBytes(StandardCharsets.UTF_8);
    public static final byte[] RETRY_LEAD = "retry: ".getBytes(StandardCharsets.UTF_8);
    public static final byte[] DATA_LEAD = "data: ".getBytes(StandardCharsets.UTF_8);
    public static final byte[] EOL = "\n".getBytes(StandardCharsets.UTF_8);
 
-   public enum State {
-      NEW_LINE, COMMENT, FIELD,
+   public enum EVENT {
+      START, COMMENT, FIELD,
    }
 }

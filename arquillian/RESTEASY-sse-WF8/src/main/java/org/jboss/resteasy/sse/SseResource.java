@@ -40,7 +40,7 @@ public class SseResource
       }
       try {
          OutboundSseEvent.Builder builder = sseContext.newEvent();
-         builder.name("MessageQueueSingle inited sseEventOutput");
+         builder.name("Add");
          builder.comment("single event is added");
          builder.data("single");
          sseEventOutput.write(builder.build());
@@ -106,25 +106,25 @@ public class SseResource
          {
             try
             {
-               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 1));
+               output.write(createStatsEvent(sseContext.newEvent().comment("greenhouse"), 1));
                Thread.sleep(1000);
-               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 2));
+               output.write(createStatsEvent(sseContext.newEvent().comment("greenhouse"), 2));
                Thread.sleep(1000);
-               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 3));
+               output.write(createStatsEvent(sseContext.newEvent().comment("greenhouse"), 3));
                Thread.sleep(1000);
-               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 4));
+               output.write(createStatsEvent(sseContext.newEvent().comment("greenhouse"), 4));
                Thread.sleep(1000);
-               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 5));
+               output.write(createStatsEvent(sseContext.newEvent().comment("greenhouse"), 5));
                Thread.sleep(1000);
-               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 6));
+               output.write(createStatsEvent(sseContext.newEvent().comment("greenhouse"), 6));
                Thread.sleep(1000);
-               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 7));
+               output.write(createStatsEvent(sseContext.newEvent().comment("greenhouse"), 7));
                Thread.sleep(1000);
-               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 8));
+               output.write(createStatsEvent(sseContext.newEvent().comment("greenhouse"), 8));
                Thread.sleep(1000);
-               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 9));
+               output.write(createStatsEvent(sseContext.newEvent().comment("greenhouse"), 9));
                Thread.sleep(1000);
-               output.write(createStatsEvent(sseContext.newEvent().name("greenhouse"), 10));
+               output.write(createStatsEvent(sseContext.newEvent().comment("greenhouse"), 10));
 
                output.close();
             }

@@ -30,6 +30,6 @@ public class SseEventOutputProvider implements MessageBodyWriter<SseEventOutput>
                         final Annotation[] annotations, final MediaType mediaType,
                         final MultivaluedMap<String, Object> httpHeaders, final OutputStream entityStream)
             throws IOException, WebApplicationException {
-        //System.out.println("test");
+        //no operation
     }
 }
