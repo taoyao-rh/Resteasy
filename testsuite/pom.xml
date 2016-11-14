@@ -131,6 +131,29 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>elytron</id>
+            <activation>
+                <property>
+                    <name>elytron</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <argLine>${surefireArgLine}</argLine>
+                            <testFailureIgnore>true</testFailureIgnore>
+                            <systemPropertyVariables>
+                                <jboss.server.config.file.name>standalone-elytron.xml</jboss.server.config.file.name>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
         <!-- For testing purposes enable to run all tests including the failing ones -->
         <profile>
             <id>enable.expected.failing</id>
