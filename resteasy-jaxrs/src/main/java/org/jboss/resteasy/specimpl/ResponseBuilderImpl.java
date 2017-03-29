@@ -6,6 +6,7 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.HeaderHelper;
 import org.jboss.resteasy.util.HttpHeaderNames;
 
+import javax.ws.rs.Flow.Sink;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
@@ -13,13 +14,13 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
-import javax.ws.rs.core.NioErrorHandler;
-import javax.ws.rs.core.NioWriterHandler;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
+
 import java.lang.annotation.Annotation;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.function.Consumer;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -397,14 +399,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder
    }
 
    @Override
-   public ResponseBuilder entity(NioWriterHandler arg0)
-   {
-      // TODO Auto-generated method stub
-      return null;
-   }
-
-   @Override
-   public ResponseBuilder entity(NioWriterHandler arg0, NioErrorHandler arg1)
+   public ResponseBuilder entity(Consumer<Sink<ByteBuffer>> writeHandler)
    {
       // TODO Auto-generated method stub
       return null;

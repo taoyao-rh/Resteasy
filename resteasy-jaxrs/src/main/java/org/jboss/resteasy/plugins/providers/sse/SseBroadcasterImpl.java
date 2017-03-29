@@ -1,49 +1,102 @@
 package org.jboss.resteasy.plugins.providers.sse;
 
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
+
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import javax.ws.rs.Flow.Subscriber;
+import javax.ws.rs.Flow;
+import javax.ws.rs.Flow.Sink;
 import javax.ws.rs.Flow.Subscription;
 import javax.ws.rs.sse.OutboundSseEvent;
 import javax.ws.rs.sse.SseBroadcaster;
 
+import org.reactivestreams.Subscriber;
+
 public class SseBroadcasterImpl implements SseBroadcaster
 {
-   private final Map<Subscriber<? super OutboundSseEvent>, Subscription> subscribers = new ConcurrentHashMap<>();
-   private final Set<Consumer<Subscriber<? super OutboundSseEvent>>> onCloseConsumers = new CopyOnWriteArraySet<>();
-   private final Set<BiConsumer<Subscriber<? super OutboundSseEvent>, Exception>> onExceptionConsumers = new CopyOnWriteArraySet<>();
+   private final int THREADS = 5;
+
+   private final Map<Sink<? super OutboundSseEvent>, Subscription> subscribers = new ConcurrentHashMap<>();
+
+   private final Set<Consumer<Sink<? super OutboundSseEvent>>> onCloseConsumers = new CopyOnWriteArraySet<>();
+
+   private final Set<BiConsumer<Sink<? super OutboundSseEvent>, Throwable>> onErrorConsumers = new CopyOnWriteArraySet<>();
+
+   private BlockingQueue<OutboundSseEvent> eventQueue = new ArrayBlockingQueue<OutboundSseEvent>(1024);
+
+   private AtomicInteger threadCounter = new AtomicInteger();
    
+   private EventCallback eventHandler;
+   
+   private Flowable<OutboundSseEvent> flowable;
+
+   //TODO : Look at use a concainter provided thread pool ?
+   private ExecutorService service = Executors.newCachedThreadPool(runnable -> {
+      Thread thread = new Thread(runnable);
+      thread.setName("SseEvent Emmiter thread  " + threadCounter.getAndIncrement());
+      return thread;
+   });
+
+   public SseBroadcasterImpl () {
+         flowable = Flowable.create(emitter ->  {
+         EventCallback callback = new EventCallback() {
+            @Override
+            public void send(OutboundSseEvent event) {
+              emitter.onNext(event);
+              //TODO: give a flag to trigger onCompleted ?
+              //emitter.onCompleted();
+            }
+
+            @Override
+            public void error(Throwable e) {
+              emitter.onError(e);
+            }
+          };
+          this.eventHandler = callback;
+        }, BackpressureStrategy.BUFFER);
+     
+   }
+
    @Override
    public void broadcast(OutboundSseEvent event)
    {
-      for (final Subscriber<? super OutboundSseEvent> subscriber : subscribers.keySet())
-      {
-         try
-         {
-            subscriber.onNext(event);
-         }
-         catch (final Exception ex)
-         {
-            subscriber.onError(ex); //TODO is this required?
-            onExceptionConsumers.forEach(exceptioner -> exceptioner.accept(subscriber, ex));
+      if (eventQueue.size() == 0) {
+         for (int i = 0 ; i < THREADS; i++) {
+            service.submit(() -> {
+               try
+               {
+                  this.eventHandler.send(eventQueue.take());
+               }
+               catch (Exception e)
+               {
+                  this.eventHandler.error(e);
+               }
+            });
          }
       }
+      eventQueue.add(event);
    }
 
    @Override
    public void close()
    {
-      for (final Subscriber<? super OutboundSseEvent> output : subscribers.keySet())
+      for (final Sink<? super OutboundSseEvent> output : subscribers.keySet())
       {
          try
          {
             output.onComplete();
-            for (Consumer<Subscriber<? super OutboundSseEvent>> consumer : onCloseConsumers)
+            for (Consumer<Sink<? super OutboundSseEvent>> consumer : onCloseConsumers)
             {
                consumer.accept(output);
             }
@@ -57,40 +110,65 @@ public class SseBroadcasterImpl implements SseBroadcaster
    }
 
    @Override
-   public void onException(BiConsumer<Subscriber<? super OutboundSseEvent>, Exception> onException)
+   public void onError(BiConsumer<Flow.Sink<? super OutboundSseEvent>, Throwable> onError)
    {
-      onExceptionConsumers.add(onException);
+      onErrorConsumers.add(onError);
    }
 
    @Override
-   public void onClose(Consumer<Subscriber<? super OutboundSseEvent>> onClose)
+   public void onClose(Consumer<Sink<? super OutboundSseEvent>> onClose)
    {
       onCloseConsumers.add(onClose);
    }
 
    @Override
-   public void subscribe(Subscriber<? super OutboundSseEvent> subscriber)
+   public void subscribe(Sink<? super OutboundSseEvent> subscriber)
    {
-      final Subscription subscription = new Subscription()
-      {
-         public void request(long n)
+      flowable.subscribe(new Subscriber<OutboundSseEvent>() {
+
+         @Override
+         public void onSubscribe(org.reactivestreams.Subscription s)
          {
+            subscriber.onSubscribe(new Subscription (){
+
+               @Override
+               public void request(long n)
+               {
+                  s.request(n);
+               }
+
+               @Override
+               public void cancel()
+               {
+                  s.cancel();
+                  
+               }
+               
+            });
+            
          }
 
          @Override
-         public void cancel()
+         public void onNext(OutboundSseEvent t)
          {
+            subscriber.onNext(t);
+            
          }
-      };
 
-      try
-      {
-         subscriber.onSubscribe(subscription);
-         subscribers.put(subscriber, subscription);
-      }
-      catch (final Exception ex)
-      {
-         subscriber.onError(ex);
-      }
+         @Override
+         public void onError(Throwable t)
+         {
+            subscriber.onError(t);
+            
+         }
+
+         @Override
+         public void onComplete()
+         {
+            subscriber.onComplete();
+            
+         }
+         
+      });
    }
 }

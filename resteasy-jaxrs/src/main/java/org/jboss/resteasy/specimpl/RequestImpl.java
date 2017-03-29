@@ -7,10 +7,15 @@ import org.jboss.resteasy.spi.ResteasyConfiguration;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.DateUtil;
 
+import javax.ws.rs.Flow.Source;
 import javax.ws.rs.core.*;
+import javax.ws.rs.core.Response.ResponseBuilder;
+
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static org.jboss.resteasy.resteasy_jaxrs.i18n.Messages.MESSAGES;
 import static org.jboss.resteasy.util.HttpHeaderNames.*;
@@ -211,41 +216,23 @@ public class RequestImpl implements Request
       if (rtn != null && varyHeader != null) rtn.header(VARY, varyHeader);
       return rtn;
    }
-
-   public Response.ResponseBuilder evaluatePreconditions()
-   {
-      List<String> ifMatch = headers.getRequestHeaders().get(IF_MATCH);
-      if (ifMatch == null || ifMatch.size() == 0)
-      {
-         return null;
-      }
-
-      return Response.status(SC_PRECONDITION_FAILED);
-   }
-
+   //TODO:implement these
    @Override
-   public void entity(NioReaderHandler arg0)
+   public ResponseBuilder evaluatePreconditions()
    {
       // TODO Auto-generated method stub
-      
+      return null;
    }
 
    @Override
-   public void entity(NioReaderHandler arg0, NioCompletionHandler arg1)
+   public Source<ByteBuffer> entity()
    {
       // TODO Auto-generated method stub
-      
+      return null;
    }
 
    @Override
-   public void entity(NioReaderHandler arg0, NioErrorHandler arg1)
-   {
-      // TODO Auto-generated method stub
-      
-   }
-
-   @Override
-   public void entity(NioReaderHandler arg0, NioCompletionHandler arg1, NioErrorHandler arg2)
+   public void entity(Consumer<Source<ByteBuffer>> readerHandler)
    {
       // TODO Auto-generated method stub
       

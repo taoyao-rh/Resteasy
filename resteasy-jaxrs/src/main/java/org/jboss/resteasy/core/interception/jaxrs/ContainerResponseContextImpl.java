@@ -4,6 +4,7 @@ import org.jboss.resteasy.specimpl.BuiltResponse;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.HttpResponse;
 
+import javax.ws.rs.Flow.Processor;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
@@ -12,11 +13,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
@@ -244,5 +247,13 @@ public class ContainerResponseContextImpl implements ContainerResponseContext
    public String getHeaderString(String name)
    {
       return jaxrsResponse.getHeaderString(name);
+   }
+
+   //TODO:implement this
+   @Override
+   public void addProcessor(Processor<ByteBuffer, ByteBuffer> processor)
+   {
+      // TODO Auto-generated method stub
+      
    }
 }

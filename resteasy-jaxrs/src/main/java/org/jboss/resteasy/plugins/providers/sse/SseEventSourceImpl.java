@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import javax.ws.rs.Flow.Sink;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
@@ -366,5 +367,12 @@ public class SseEventSourceImpl implements SseEventSource
             executor.submit(processor);
          }
       }
+   }
+   //TODO:implement this
+   @Override
+   public void subscribe(Sink<? super InboundSseEvent> sink)
+   {
+      // TODO Auto-generated method stub
+      
    }
 }

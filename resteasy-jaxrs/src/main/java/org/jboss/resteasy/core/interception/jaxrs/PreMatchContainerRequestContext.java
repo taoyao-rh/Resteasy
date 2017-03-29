@@ -3,6 +3,7 @@ package org.jboss.resteasy.core.interception.jaxrs;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
+import javax.ws.rs.Flow.Processor;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
@@ -11,8 +12,10 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -199,5 +202,13 @@ public class PreMatchContainerRequestContext implements ContainerRequestContext
    public String getHeaderString(String name)
    {
       return httpRequest.getHttpHeaders().getHeaderString(name);
+   }
+
+   //TODO:implement this
+   @Override
+   public void addProcessor(Processor<ByteBuffer, ByteBuffer> processor)
+   {
+      // TODO Auto-generated method stub
+      
    }
 }

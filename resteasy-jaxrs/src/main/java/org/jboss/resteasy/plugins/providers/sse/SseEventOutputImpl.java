@@ -62,7 +62,7 @@ public class SseEventOutputImpl extends GenericType<OutboundSseEvent> implements
    }
    
    @Override
-   public void close() throws IOException
+   public void close()
    {
       if (request.getAsyncContext().isSuspended() && request.getAsyncContext().getAsyncResponse() != null) {
          if (request.getAsyncContext().isSuspended()) {
@@ -117,10 +117,6 @@ public class SseEventOutputImpl extends GenericType<OutboundSseEvent> implements
    public void onComplete()
    {
       //TODO is this OK??
-      try {
-         close();
-      } catch (IOException e) {
-         throw new ProcessingException(e);
-      }
+      close();
    }
 }
