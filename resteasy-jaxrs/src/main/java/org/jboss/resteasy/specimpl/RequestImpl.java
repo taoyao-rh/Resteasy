@@ -7,15 +7,12 @@ import org.jboss.resteasy.spi.ResteasyConfiguration;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.DateUtil;
 
-import javax.ws.rs.Flow.Source;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.function.Consumer;
 
 import static org.jboss.resteasy.resteasy_jaxrs.i18n.Messages.MESSAGES;
 import static org.jboss.resteasy.util.HttpHeaderNames.*;
@@ -225,14 +222,28 @@ public class RequestImpl implements Request
    }
 
    @Override
-   public Source<ByteBuffer> entity()
+   public void entity(NioReaderHandler reader)
    {
       // TODO Auto-generated method stub
-      return null;
+      
    }
 
    @Override
-   public void entity(Consumer<Source<ByteBuffer>> readerHandler)
+   public void entity(NioReaderHandler reader, NioCompletionHandler completion)
+   {
+      // TODO Auto-generated method stub
+      
+   }
+
+   @Override
+   public void entity(NioReaderHandler reader, NioErrorHandler error)
+   {
+      // TODO Auto-generated method stub
+      
+   }
+
+   @Override
+   public void entity(NioReaderHandler reader, NioCompletionHandler completion, NioErrorHandler error)
    {
       // TODO Auto-generated method stub
       

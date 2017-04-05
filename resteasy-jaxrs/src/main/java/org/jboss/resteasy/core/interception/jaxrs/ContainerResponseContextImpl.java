@@ -249,11 +249,4 @@ public class ContainerResponseContextImpl implements ContainerResponseContext
       return jaxrsResponse.getHeaderString(name);
    }
 
-   //TODO:implement this
-   @Override
-   public void addProcessor(Processor<ByteBuffer, ByteBuffer> processor)
-   {
-      // TODO Auto-generated method stub
-      
-   }
 }

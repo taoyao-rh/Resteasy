@@ -6,7 +6,6 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.HeaderHelper;
 import org.jboss.resteasy.util.HttpHeaderNames;
 
-import javax.ws.rs.Flow.Sink;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
@@ -14,6 +13,8 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.NioErrorHandler;
+import javax.ws.rs.core.NioWriterHandler;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
@@ -399,7 +400,14 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder
    }
 
    @Override
-   public ResponseBuilder entity(Consumer<Sink<ByteBuffer>> writeHandler)
+   public ResponseBuilder entity(NioWriterHandler writer)
+   {
+      // TODO Auto-generated method stub
+      return null;
+   }
+
+   @Override
+   public ResponseBuilder entity(NioWriterHandler writer, NioErrorHandler error)
    {
       // TODO Auto-generated method stub
       return null;

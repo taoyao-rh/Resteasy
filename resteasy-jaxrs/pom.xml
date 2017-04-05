@@ -24,7 +24,6 @@
         <dependency>
             <groupId>io.reactivex.rxjava2</groupId>
             <artifactId>rxjava</artifactId>
-            <vesrion>2.0.7</vesrion>
         </dependency>
         <dependency>
             <groupId>org.jboss.spec.javax.servlet</groupId>

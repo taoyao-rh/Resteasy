@@ -16,22 +16,21 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import javax.ws.rs.Flow;
-import javax.ws.rs.Flow.Sink;
+import javax.ws.rs.Flow.Subscriber;
 import javax.ws.rs.Flow.Subscription;
 import javax.ws.rs.sse.OutboundSseEvent;
 import javax.ws.rs.sse.SseBroadcaster;
 
-import org.reactivestreams.Subscriber;
 
 public class SseBroadcasterImpl implements SseBroadcaster
 {
    private final int THREADS = 5;
 
-   private final Map<Sink<? super OutboundSseEvent>, Subscription> subscribers = new ConcurrentHashMap<>();
+   private final Map<Subscriber<? super OutboundSseEvent>, Subscription> subscribers = new ConcurrentHashMap<>();
 
-   private final Set<Consumer<Sink<? super OutboundSseEvent>>> onCloseConsumers = new CopyOnWriteArraySet<>();
+   private final Set<Consumer<Subscriber<? super OutboundSseEvent>>> onCloseConsumers = new CopyOnWriteArraySet<>();
 
-   private final Set<BiConsumer<Sink<? super OutboundSseEvent>, Throwable>> onErrorConsumers = new CopyOnWriteArraySet<>();
+   private final Set<BiConsumer<Subscriber<? super OutboundSseEvent>, Throwable>> onErrorConsumers = new CopyOnWriteArraySet<>();
 
    private BlockingQueue<OutboundSseEvent> eventQueue = new ArrayBlockingQueue<OutboundSseEvent>(1024);
 
@@ -91,12 +90,12 @@ public class SseBroadcasterImpl implements SseBroadcaster
    @Override
    public void close()
    {
-      for (final Sink<? super OutboundSseEvent> output : subscribers.keySet())
+      for (final Subscriber<? super OutboundSseEvent> output : subscribers.keySet())
       {
          try
          {
             output.onComplete();
-            for (Consumer<Sink<? super OutboundSseEvent>> consumer : onCloseConsumers)
+            for (Consumer<Subscriber<? super OutboundSseEvent>> consumer : onCloseConsumers)
             {
                consumer.accept(output);
             }
@@ -110,21 +109,17 @@ public class SseBroadcasterImpl implements SseBroadcaster
    }
 
    @Override
-   public void onError(BiConsumer<Flow.Sink<? super OutboundSseEvent>, Throwable> onError)
+   public void onError(BiConsumer<Flow.Subscriber<? super OutboundSseEvent>, Throwable> onError)
    {
       onErrorConsumers.add(onError);
    }
 
-   @Override
-   public void onClose(Consumer<Sink<? super OutboundSseEvent>> onClose)
-   {
-      onCloseConsumers.add(onClose);
-   }
+
 
    @Override
-   public void subscribe(Sink<? super OutboundSseEvent> subscriber)
+   public void subscribe(javax.ws.rs.Flow.Subscriber<? super OutboundSseEvent> subscriber)
    {
-      flowable.subscribe(new Subscriber<OutboundSseEvent>() {
+      flowable.subscribe(new org.reactivestreams.Subscriber<OutboundSseEvent>() {
 
          @Override
          public void onSubscribe(org.reactivestreams.Subscription s)
@@ -171,4 +166,13 @@ public class SseBroadcasterImpl implements SseBroadcaster
          
       });
    }
+
+   @Override
+   public void onClose(Consumer<javax.ws.rs.Flow.Subscriber<? super OutboundSseEvent>> onClose)
+   {
+      onCloseConsumers.add(onClose);
+      
+   }
 }
+
+
