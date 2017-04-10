@@ -36,7 +36,7 @@ public class SseBroadcasterImpl implements SseBroadcaster
 
    private AtomicInteger threadCounter = new AtomicInteger();
    
-   private EventCallback eventHandler;
+   private OutboundSseEventCallback eventHandler;
    
    private Flowable<OutboundSseEvent> flowable;
 
@@ -48,8 +48,8 @@ public class SseBroadcasterImpl implements SseBroadcaster
    });
 
    public SseBroadcasterImpl () {
-         flowable = Flowable.create(emitter ->  {
-         EventCallback callback = new EventCallback() {
+         flowable = Flowable.<OutboundSseEvent>create(emitter ->  {
+         OutboundSseEventCallback callback = new OutboundSseEventCallback() {
             @Override
             public void send(OutboundSseEvent event) {
               emitter.onNext(event);
@@ -63,7 +63,7 @@ public class SseBroadcasterImpl implements SseBroadcaster
             }
           };
           this.eventHandler = callback;
-        }, BackpressureStrategy.BUFFER);
+        }, BackpressureStrategy.BUFFER).share();
      
    }
 
@@ -117,54 +117,9 @@ public class SseBroadcasterImpl implements SseBroadcaster
 
 
    @Override
-   public void subscribe(javax.ws.rs.Flow.Subscriber<? super OutboundSseEvent> subscriber)
+   public void subscribe(Flow.Subscriber<? super OutboundSseEvent> output)
    {
-      flowable.subscribe(new org.reactivestreams.Subscriber<OutboundSseEvent>() {
-
-         @Override
-         public void onSubscribe(org.reactivestreams.Subscription s)
-         {
-            subscriber.onSubscribe(new Subscription (){
-
-               @Override
-               public void request(long n)
-               {
-                  s.request(n);
-               }
-
-               @Override
-               public void cancel()
-               {
-                  s.cancel();
-                  
-               }
-               
-            });
-            
-         }
-
-         @Override
-         public void onNext(OutboundSseEvent t)
-         {
-            subscriber.onNext(t);
-            
-         }
-
-         @Override
-         public void onError(Throwable t)
-         {
-            subscriber.onError(t);
-            
-         }
-
-         @Override
-         public void onComplete()
-         {
-            subscriber.onComplete();
-            
-         }
-         
-      });
+      flowable.subscribe(new RxStreamSubscriberAdaptor(output));
    }
 
    @Override
@@ -172,6 +127,55 @@ public class SseBroadcasterImpl implements SseBroadcaster
    {
       onCloseConsumers.add(onClose);
       
+   }
+   
+   public class RxStreamSubscriberAdaptor implements org.reactivestreams.Subscriber<OutboundSseEvent> {
+      private javax.ws.rs.Flow.Subscriber<? super OutboundSseEvent> subscriber;
+      public  RxStreamSubscriberAdaptor(javax.ws.rs.Flow.Subscriber<? super OutboundSseEvent> output) {
+         this.subscriber = output;
+      }
+      @Override
+      public void onSubscribe(org.reactivestreams.Subscription s)
+      {
+         subscriber.onSubscribe(new Subscription (){
+
+            @Override
+            public void request(long n)
+            {
+               s.request(n);
+            }
+
+            @Override
+            public void cancel()
+            {
+               s.cancel();
+               
+            }
+            
+         });
+         
+      }
+
+      @Override
+      public void onNext(OutboundSseEvent t)
+      {
+         subscriber.onNext(t);
+         
+      }
+
+      @Override
+      public void onError(Throwable t)
+      {
+         subscriber.onError(t);
+         
+      }
+
+      @Override
+      public void onComplete()
+      {
+         subscriber.onComplete();
+         
+      }
    }
 }
 
