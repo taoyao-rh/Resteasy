@@ -137,9 +137,6 @@
         <module-def name="org.jboss.resteasy.resteasy-jaxrs">
             <maven-resource group="org.jboss.resteasy" artifact="resteasy-jaxrs"/>  
             <maven-resource group="org.jboss.resteasy" artifact="resteasy-client"/>
-            <!--move these to rxjava module-->
-            <maven-resource group="io.reactivex.rxjava2" artifact="rxjava"/>
-            <maven-resource group="org.reactivestreams" artifact="reactive-streams"/>
         </module-def>
 
         <module-def name="org.jboss.resteasy.resteasy-jaxrs-api">

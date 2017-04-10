@@ -4,9 +4,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.function.BiConsumer;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Flow.Subscription;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.core.GenericType;
@@ -80,15 +82,25 @@ public class SseEventOutputImpl extends GenericType<OutboundSseEvent> implements
    {
       return closed;
    }
-
+   
    @Override
-   public void onSubscribe(Subscription subscription)
+   public CompletionStage<?> send(OutboundSseEvent event)
    {
-      subscription.request(Long.MAX_VALUE);
+      return send(event, (a, b) -> {});
    }
 
-   @Override
-   public void onNext(OutboundSseEvent event)
+   //We need this to make it async enough
+   public CompletionStage<?> send(OutboundSseEvent event, BiConsumer<SseEventSink, Throwable> errorConsumer)
+   {
+      CompletableFuture<Object> future = CompletableFuture
+            .supplyAsync(() -> {writeEvent(event); return event;});
+      //TODO: log this 
+      future.exceptionally((Throwable ex) -> { errorConsumer.accept(this, ex); return ex;});
+      return future;
+   }
+   
+ 
+   protected void writeEvent(OutboundSseEvent event)
    {
       ResteasyProviderFactory.pushContextDataMap(contextDataMap);
       try {
@@ -105,18 +117,5 @@ public class SseEventOutputImpl extends GenericType<OutboundSseEvent> implements
       } finally {
          ResteasyProviderFactory.removeContextDataLevel();
       }
-   }
-
-   @Override
-   public void onError(Throwable throwable)
-   {
-      // TODO Auto-generated method stub
-   }
-
-   @Override
-   public void onComplete()
-   {
-      //TODO is this OK??
-      close();
    }
 }

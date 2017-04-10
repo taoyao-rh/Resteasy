@@ -34,7 +34,6 @@
         <version.javax.activation>1.1.1</version.javax.activation>
         <version.javax.enterprise.cdi-api>1.2</version.javax.enterprise.cdi-api>
         <version.javax.ws.rs-api>2.1-SNAPSHOT</version.javax.ws.rs-api>
-        <version.io.reactivex.rxjava2>2.0.7</version.io.reactivex.rxjava2>
         <version.junit>4.12</version.junit>
         <version.log4j>2.6.2</version.log4j>
         <version.net.jcip.jcip-annotations>1.0</version.net.jcip.jcip-annotations>
@@ -620,16 +619,6 @@
                 <artifactId>wildfly-arquillian-container-managed</artifactId>
                 <version>${version.org.wildfly.wildfly-arquillian-container-managed}</version>
             </dependency>
-            <dependency>
-                <groupId>io.reactivex.rxjava2</groupId>
-                <artifactId>rxjava</artifactId>
-                <version>${version.io.reactivex.rxjava2}</version>
-            </dependency>
-            <!--dependency>
-                <groupId>io.projectreactor.addons</groupId>
-                <artifactId>reactor-adapter</artifactId>
-                <version>3.0.5.RELEASE</version>
-            </dependency-->
         </dependencies>
     </dependencyManagement>
 </project>

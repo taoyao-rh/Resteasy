@@ -1,182 +1,74 @@
 package org.jboss.resteasy.plugins.providers.sse;
 
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
-
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import javax.ws.rs.Flow;
-import javax.ws.rs.Flow.Subscriber;
-import javax.ws.rs.Flow.Subscription;
 import javax.ws.rs.sse.OutboundSseEvent;
 import javax.ws.rs.sse.SseBroadcaster;
+import javax.ws.rs.sse.SseEventSink;
 
 
 public class SseBroadcasterImpl implements SseBroadcaster
 {
-   private final int THREADS = 5;
-
-   private final Map<Subscriber<? super OutboundSseEvent>, Subscription> subscribers = new ConcurrentHashMap<>();
-
-   private final Set<Consumer<Subscriber<? super OutboundSseEvent>>> onCloseConsumers = new CopyOnWriteArraySet<>();
-
-   private final Set<BiConsumer<Subscriber<? super OutboundSseEvent>, Throwable>> onErrorConsumers = new CopyOnWriteArraySet<>();
-
-   private BlockingQueue<OutboundSseEvent> eventQueue = new ArrayBlockingQueue<OutboundSseEvent>(1024);
-
-   private AtomicInteger threadCounter = new AtomicInteger();
+   private ConcurrentLinkedQueue<SseEventSink> outputQueue = new ConcurrentLinkedQueue<SseEventSink>();
+   private final List<BiConsumer<SseEventSink, Throwable>> onErrorConsumers = new CopyOnWriteArrayList<>();
+   private final List<Consumer<SseEventSink>> closeConsumers = new CopyOnWriteArrayList<>();
    
-   private OutboundSseEventCallback eventHandler;
-   
-   private Flowable<OutboundSseEvent> flowable;
-
-   //TODO : Look at use a concainter provided thread pool ?
-   private ExecutorService service = Executors.newCachedThreadPool(runnable -> {
-      Thread thread = new Thread(runnable);
-      thread.setName("SseEvent Emmiter thread  " + threadCounter.getAndIncrement());
-      return thread;
-   });
-
    public SseBroadcasterImpl () {
-         flowable = Flowable.<OutboundSseEvent>create(emitter ->  {
-         OutboundSseEventCallback callback = new OutboundSseEventCallback() {
-            @Override
-            public void send(OutboundSseEvent event) {
-              emitter.onNext(event);
-              //TODO: give a flag to trigger onCompleted ?
-              //emitter.onCompleted();
-            }
-
-            @Override
-            public void error(Throwable e) {
-              emitter.onError(e);
-            }
-          };
-          this.eventHandler = callback;
-        }, BackpressureStrategy.BUFFER).share();
      
    }
 
-   @Override
-   public void broadcast(OutboundSseEvent event)
-   {
-      if (eventQueue.size() == 0) {
-         for (int i = 0 ; i < THREADS; i++) {
-            service.submit(() -> {
-               try
-               {
-                  this.eventHandler.send(eventQueue.take());
-               }
-               catch (Exception e)
-               {
-                  this.eventHandler.error(e);
-               }
-            });
-         }
-      }
-      eventQueue.add(event);
-   }
+
 
    @Override
    public void close()
    {
-      for (final Subscriber<? super OutboundSseEvent> output : subscribers.keySet())
-      {
-         try
-         {
-            output.onComplete();
-            for (Consumer<Subscriber<? super OutboundSseEvent>> consumer : onCloseConsumers)
-            {
-               consumer.accept(output);
-            }
-         }
-         catch (final Exception ex)
-         {
-            output.onError(ex); //TODO is this required?
-            onCloseConsumers.forEach(occ -> occ.accept(output));
-         }
-      }
+      outputQueue.forEach(evenSink -> {closeConsumers.forEach(consumer-> {consumer.accept(evenSink);});});
+      outputQueue.clear();
    }
 
+
    @Override
-   public void onError(BiConsumer<Flow.Subscriber<? super OutboundSseEvent>, Throwable> onError)
+   public void onError(BiConsumer<SseEventSink, Throwable> onError)
    {
-      onErrorConsumers.add(onError);
+      onErrorConsumers.add(onError); 
    }
 
 
 
    @Override
-   public void subscribe(Flow.Subscriber<? super OutboundSseEvent> output)
-   {
-      flowable.subscribe(new RxStreamSubscriberAdaptor(output));
-   }
-
-   @Override
-   public void onClose(Consumer<javax.ws.rs.Flow.Subscriber<? super OutboundSseEvent>> onClose)
-   {
-      onCloseConsumers.add(onClose);
-      
+   public void onClose(Consumer<SseEventSink> onClose)
+   {      
+      closeConsumers.add(onClose);
    }
    
-   public class RxStreamSubscriberAdaptor implements org.reactivestreams.Subscriber<OutboundSseEvent> {
-      private javax.ws.rs.Flow.Subscriber<? super OutboundSseEvent> subscriber;
-      public  RxStreamSubscriberAdaptor(javax.ws.rs.Flow.Subscriber<? super OutboundSseEvent> output) {
-         this.subscriber = output;
-      }
-      @Override
-      public void onSubscribe(org.reactivestreams.Subscription s)
-      {
-         subscriber.onSubscribe(new Subscription (){
-
-            @Override
-            public void request(long n)
-            {
-               s.request(n);
-            }
-
-            @Override
-            public void cancel()
-            {
-               s.cancel();
-               
-            }
-            
-         });
-         
-      }
-
-      @Override
-      public void onNext(OutboundSseEvent t)
-      {
-         subscriber.onNext(t);
-         
-      }
-
-      @Override
-      public void onError(Throwable t)
-      {
-         subscriber.onError(t);
-         
-      }
-
-      @Override
-      public void onComplete()
-      {
-         subscriber.onComplete();
-         
-      }
+   @Override
+   public void register(SseEventSink sseEventSink)
+   {
+      outputQueue.add(sseEventSink);
+      
    }
+
+   @Override  
+   public CompletionStage<?> broadcast(OutboundSseEvent event)
+   {  
+      outputQueue.forEach(eventSink -> {SseEventOutputImpl outputImpl=(SseEventOutputImpl)eventSink; outputImpl.send(event, callAllErrConsumers());});
+      //return event immediately and doesn't block anything
+      return CompletableFuture.supplyAsync(() -> { return event;});
+   }
+   
+   BiConsumer<SseEventSink, Throwable> callAllErrConsumers() {
+      return (eventSink, err) -> {
+         onErrorConsumers.forEach(consumer -> {consumer.accept(eventSink, err);});
+      };
+      
+   }
+
 }
 
 

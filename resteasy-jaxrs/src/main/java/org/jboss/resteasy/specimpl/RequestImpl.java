@@ -221,32 +221,5 @@ public class RequestImpl implements Request
       return null;
    }
 
-   @Override
-   public void entity(NioReaderHandler reader)
-   {
-      // TODO Auto-generated method stub
-      
-   }
-
-   @Override
-   public void entity(NioReaderHandler reader, NioCompletionHandler completion)
-   {
-      // TODO Auto-generated method stub
-      
-   }
-
-   @Override
-   public void entity(NioReaderHandler reader, NioErrorHandler error)
-   {
-      // TODO Auto-generated method stub
-      
-   }
-
-   @Override
-   public void entity(NioReaderHandler reader, NioCompletionHandler completion, NioErrorHandler error)
-   {
-      // TODO Auto-generated method stub
-      
-   }
 
 }

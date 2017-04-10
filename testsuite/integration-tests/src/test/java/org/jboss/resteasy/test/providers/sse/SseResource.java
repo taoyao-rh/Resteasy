@@ -40,7 +40,7 @@ public class SseResource
        if (eventSink == null) {
            throw new IllegalStateException("No client connected.");
        }
-       eventSink.onNext(sse.newEvent(message));
+       eventSink.send(sse.newEvent(message));
    }
    
    @GET
@@ -54,7 +54,7 @@ public class SseResource
 	   if (sseBroadcaster == null) {
 		   sseBroadcaster = sse.newBroadcaster();
 	   }
-	   sseBroadcaster.subscribe(sink);	  
+	   sseBroadcaster.register(sink);	  
    }
    
    @POST
@@ -89,18 +89,18 @@ public class SseResource
          {
             try
             {
-               sink.onNext(sse.newEventBuilder().name("domain-progress")
+               sink.send(sse.newEventBuilder().name("domain-progress")
                      .data(String.class, "starting domain " + id + " ...").build());
                Thread.sleep(200);
-               sink.onNext(sse.newEvent("domain-progress", "50%"));
+               sink.send(sse.newEvent("domain-progress", "50%"));
                Thread.sleep(200);
-               sink.onNext(sse.newEvent("domain-progress", "60%"));
+               sink.send(sse.newEvent("domain-progress", "60%"));
                Thread.sleep(200);
-               sink.onNext(sse.newEvent("domain-progress", "70%"));
+               sink.send(sse.newEvent("domain-progress", "70%"));
                Thread.sleep(200);
-               sink.onNext(sse.newEvent("domain-progress", "99%"));
+               sink.send(sse.newEvent("domain-progress", "99%"));
                Thread.sleep(200);
-               sink.onNext(sse.newEvent("domain-progress", "Done."));
+               sink.send(sse.newEvent("domain-progress", "Done."));
                sink.close();
             }
             catch (final InterruptedException e)

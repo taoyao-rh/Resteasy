@@ -1,10 +1,7 @@
 package org.jboss.resteasy.plugins.providers.sse;
 
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
-
-/*import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;*/
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -14,13 +11,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-import javax.ws.rs.Flow.Subscriber;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.sse.InboundSseEvent;
 import javax.ws.rs.sse.SseEventSource;
-import javax.ws.rs.sse.SseSubscription;
 
 import org.apache.http.HttpHeaders;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
@@ -39,13 +34,9 @@ public class SseEventSourceImpl implements SseEventSource
    private final boolean disableKeepAlive;
    private final ScheduledExecutorService executor;
    private final AtomicReference<State> state = new AtomicReference<>(State.READY);
-   //Remove this after reactive api is used and tested
-   /* private final List<Consumer<SseSubscription>> onSubscribeConsumers = new CopyOnWriteArrayList<>(); //TODO how to use this?
    private final List<Consumer<InboundSseEvent>> onEventConsumers = new CopyOnWriteArrayList<>();
    private final List<Consumer<Throwable>> onErrorConsumers = new CopyOnWriteArrayList<>();
-   private final List<Runnable> onCompleteConsumers = new CopyOnWriteArrayList<>();*/
-   private Flowable<InboundSseEvent> flowable;
-   private InboundSseEventCallback eventCallback = null;
+   private final List<Runnable> onCompleteConsumers = new CopyOnWriteArrayList<>();
    
    public static class SourceBuilder extends Builder
    {
@@ -117,29 +108,7 @@ public class SseEventSourceImpl implements SseEventSource
       {
          name = String.format("sse-event-source(%s)", target.getUri());
       }
-      this.executor = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
-
-      flowable = Flowable.<InboundSseEvent>create(emitter ->  {
-         InboundSseEventCallback callback = new InboundSseEventCallback() {
-         @Override
-         public void receive(InboundSseEvent event) {
-           emitter.onNext(event);
-         }
-
-         @Override
-         public void error(Throwable e) {
-           emitter.onError(e);
-         }
-         
-         @Override
-         public void close() {
-            emitter.onComplete();
-         }
-       };
-       this.eventCallback = callback;
-     }, BackpressureStrategy.BUFFER).share();
-  
-      
+      this.executor = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());    
       if (open)
       {
          open();
@@ -195,8 +164,7 @@ public class SseEventSourceImpl implements SseEventSource
       if (onEvent == null) {
          throw new IllegalArgumentException();
       }
-      //onEventConsumers.add(onEvent);
-      flowable.subscribe(onEvent::accept);
+      onEventConsumers.add(onEvent);
    }
 
    public void subscribe(Consumer<InboundSseEvent> onEvent,
@@ -207,9 +175,8 @@ public class SseEventSourceImpl implements SseEventSource
       if (onError == null) {
          throw new IllegalArgumentException();
       }
-      //onEventConsumers.add(onEvent);
-      //onErrorConsumers.add(onError);
-      flowable.subscribe(onEvent::accept, onError::accept);
+      onEventConsumers.add(onEvent);
+      onErrorConsumers.add(onError);
    }
 
    public void subscribe(Consumer<InboundSseEvent> onEvent,
@@ -224,59 +191,15 @@ public class SseEventSourceImpl implements SseEventSource
       if (onComplete == null) {
          throw new IllegalArgumentException();
       }
-      //onEventConsumers.add(onEvent);
-      //onErrorConsumers.add(onError);
-      //onCompleteConsumers.add(onComplete);
-      flowable.subscribe(onEvent::accept, onError::accept, onComplete::run);
+      onEventConsumers.add(onEvent);
+      onErrorConsumers.add(onError);
+      onCompleteConsumers.add(onComplete);
    }
 
-   public void subscribe(Consumer<SseSubscription> onSubscribe,
-                  Consumer<InboundSseEvent> onEvent,
-                  Consumer<Throwable> onError,
-                  Runnable onComplete) {
-      if (onSubscribe == null) {
-         throw new IllegalArgumentException();
-      }
-      if (onEvent == null) {
-         throw new IllegalArgumentException();
-      }
-      if (onError == null) {
-         throw new IllegalArgumentException();
-      }
-      if (onComplete == null) {
-         throw new IllegalArgumentException();
-      }
-      
-      //onSubscribeConsumers.add(onSubscribe);
-      //onEventConsumers.add(onEvent);
-      //onErrorConsumers.add(onError);
-      //onCompleteConsumers.add(onComplete);
-      flowable.subscribe(onEvent::accept, onError::accept, onComplete::run, new Consumer<org.reactivestreams.Subscription>() {
-         public void accept(org.reactivestreams.Subscription sub)
-         {
-            onSubscribe.accept(new SseSubscription() {
-               @Override
-               public void request(long n)
-               {
-                  sub.request(n);  
-               }
-               @Override
-               public void cancel()
-               {
-                 sub.cancel();               
-               }
-               
-            });
-         }
-         
-      } :: accept);
-     
-   }
    
    @Override
    public boolean close(final long timeout, final TimeUnit unit)
    {
-      eventCallback.close();
       if (state.getAndSet(State.CLOSED) != State.CLOSED)
       {
          executor.shutdownNow();
@@ -290,9 +213,11 @@ public class SseEventSourceImpl implements SseEventSource
       }
       catch (InterruptedException e)
       {
+         onErrorConsumers.forEach(consumer -> {consumer.accept(e);});
          Thread.currentThread().interrupt();
          return false;
       }
+      
       return true;
    }
 
@@ -328,6 +253,7 @@ public class SseEventSourceImpl implements SseEventSource
                eventInput = request.get(SseEventInputImpl.class);
             }
          } catch (Throwable e) {
+            onErrorConsumers.forEach(consumer -> {consumer.accept(e);});
             e.printStackTrace();
          } finally {
             if (connectedLatch != null) {
@@ -347,6 +273,7 @@ public class SseEventSourceImpl implements SseEventSource
                if (event != null)
                {
                   onEvent(event);
+                  onEventConsumers.forEach(consumer -> {consumer.accept(event);});
                }
             }
          }
@@ -383,7 +310,6 @@ public class SseEventSourceImpl implements SseEventSource
          {
             reconnectDelay = event.getReconnectDelay();
          }
-         eventCallback.receive(event);
       }
 
       private Invocation.Builder buildRequest()
@@ -418,58 +344,5 @@ public class SseEventSourceImpl implements SseEventSource
          }
       }
    }
-   @Override
-   public void subscribe(Subscriber<? super InboundSseEvent> subscriber)
-   {
-      flowable.subscribe(new RxStreamSubscriberAdapter(subscriber));
-      
-   }
-   
-   
-    class RxStreamSubscriberAdapter implements org.reactivestreams.Subscriber<InboundSseEvent> {
 
-      private Subscriber<? super InboundSseEvent> subscriber; 
-      public RxStreamSubscriberAdapter(Subscriber<? super InboundSseEvent> subscriber)  {
-         this.subscriber = subscriber;  
-      }
-      @Override
-      public void onSubscribe(org.reactivestreams.Subscription s)
-      {
-         subscriber.onSubscribe(new  javax.ws.rs.Flow.Subscription () {          
-            @Override
-            public void request(long n)
-            {
-               s.request(n);              
-            }            
-            @Override
-            public void cancel()
-            {
-               s.cancel();
-               
-            }
-         });       
-      }
-
-      @Override
-      public void onNext(InboundSseEvent t)
-      {
-         subscriber.onNext(t);
-         
-      }
-
-      @Override
-      public void onError(Throwable t)
-      {
-         subscriber.onError(t);
-         
-      }
-
-      @Override
-      public void onComplete()
-      {
-         subscriber.onComplete();
-         
-      }
-       
-    }
 }

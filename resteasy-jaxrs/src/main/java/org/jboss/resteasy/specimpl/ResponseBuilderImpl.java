@@ -13,15 +13,12 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
-import javax.ws.rs.core.NioErrorHandler;
-import javax.ws.rs.core.NioWriterHandler;
+
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
 
 import java.lang.annotation.Annotation;
 import java.net.URI;
-import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -30,7 +27,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.function.Consumer;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -399,17 +395,4 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder
       return this;
    }
 
-   @Override
-   public ResponseBuilder entity(NioWriterHandler writer)
-   {
-      // TODO Auto-generated method stub
-      return null;
-   }
-
-   @Override
-   public ResponseBuilder entity(NioWriterHandler writer, NioErrorHandler error)
-   {
-      // TODO Auto-generated method stub
-      return null;
-   }
 }
