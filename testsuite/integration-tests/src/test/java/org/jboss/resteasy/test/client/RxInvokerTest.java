@@ -73,7 +73,6 @@ public class RxInvokerTest extends ClientTestBase
        // reload server
        admin.reload();
        mgmtClient.close();
-       
        client = ClientBuilder.newClient();
    }
 
@@ -143,7 +142,10 @@ public class RxInvokerTest extends ClientTestBase
       {
          if (useExecutor)
          {
-            return builder.rx(TestRxInvoker.class, EXECUTOR).builder(builder);
+        	//TODO:Fix this
+            //return builder.rx(TestRxInvoker.class, EXECUTOR).builder(builder);
+        	 
+        	 return builder.rx(TestRxInvoker.class).builder(builder);
          }
          else
          {
@@ -154,7 +156,9 @@ public class RxInvokerTest extends ClientTestBase
       {
          if (useExecutor)
          {
-            return builder.rx(EXECUTOR);
+        	//TODO: fix this
+        	 return builder.rx();
+            //return builder.rx(EXECUTOR);
          }
          else
          {

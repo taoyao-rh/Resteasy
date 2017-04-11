@@ -30,9 +30,15 @@ public class ClientInvocationBuilder implements Invocation.Builder
 {
    private final ClientInvocation invocation;
 
+   private ExecutorService executorService = null;
+   
    public ClientInvocationBuilder(ResteasyClient client, URI uri, ClientConfiguration configuration)
    {
       invocation = new ClientInvocation(client, uri, new ClientRequestHeaders(configuration), configuration);
+      if (!client.isCleanupExecutor())
+      {
+         executorService = client.asyncInvocationExecutor();
+      }
    }
 
    public ClientRequestHeaders getHeaders()
@@ -319,12 +325,7 @@ public class ClientInvocationBuilder implements Invocation.Builder
    @Override
    public CompletionStageRxInvoker rx()
    {
-      return new CompletionStageRxInvokerImpl(this);
-   }
-
-   @Override
-   public CompletionStageRxInvoker rx(ExecutorService executorService)
-   {
+      
       return new CompletionStageRxInvokerImpl(this, executorService);
    }
 
@@ -342,35 +343,26 @@ public class ClientInvocationBuilder implements Invocation.Builder
       }
    }
 
+
+
    @Override
-   public <T extends RxInvoker> T rx(Class<T> clazz, ExecutorService executorService)
+   public Response patch()
    {
-      try
-      {
-         return clazz.getConstructor(ExecutorService.class).newInstance(executorService);
-      }
-      catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-            | NoSuchMethodException | SecurityException e)
-      {
-         throw new RuntimeException(Messages.MESSAGES.unableToInstantiate(clazz), e);
-      }
+      // TODO Auto-generated method stub
+      return null;
    }
 
-@Override
-public Response patch() {
-	// TODO Auto-generated method stub
-	return null;
-}
+   @Override
+   public <T> T patch(Class<T> responseType)
+   {
+      // TODO Auto-generated method stub
+      return null;
+   }
 
-@Override
-public <T> T patch(Class<T> responseType) {
-	// TODO Auto-generated method stub
-	return null;
-}
-
-@Override
-public <T> T patch(GenericType<T> responseType) {
-	// TODO Auto-generated method stub
-	return null;
-}
+   @Override
+   public <T> T patch(GenericType<T> responseType)
+   {
+      // TODO Auto-generated method stub
+      return null;
+   }
 }

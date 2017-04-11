@@ -37,6 +37,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Configuration;
+
 import java.io.IOException;
 import java.security.KeyStore;
 import java.security.SecureRandom;
@@ -48,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -93,6 +95,7 @@ public class ResteasyClientBuilder extends ClientBuilder
    protected HostnameVerificationPolicy policy = HostnameVerificationPolicy.WILDCARD;
    protected ResteasyProviderFactory providerFactory;
    protected ExecutorService asyncExecutor;
+   protected ScheduledExecutorService scheduledExecutorService;
    protected boolean cleanupExecutor;
    protected SSLContext sslContext;
    protected Map<String, Object> properties = new HashMap<String, Object>();
@@ -672,6 +675,20 @@ public class ResteasyClientBuilder extends ClientBuilder
          Map<Class<?>, Integer> contracts = config.getContracts(obj.getClass());
          register(obj, contracts);
       }
+      return this;
+   }
+
+   @Override
+   public ClientBuilder executorService(ExecutorService executorService)
+   {
+      this.asyncExecutor = executorService;
+      return this;
+   }
+
+   @Override
+   public ClientBuilder scheduledExecutorService(ScheduledExecutorService scheduledExecutorService)
+   {
+      this.scheduledExecutorService = scheduledExecutorService;
       return this;
    }
 }

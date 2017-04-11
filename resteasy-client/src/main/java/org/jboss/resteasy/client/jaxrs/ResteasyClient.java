@@ -217,5 +217,10 @@ public class ResteasyClient implements Client
       if (link.getType() != null) return target.request(link.getType());
       else return target.request();
    }
+   
+   public boolean isCleanupExecutor()
+   {
+      return this.cleanupExecutor;
+   }
 
 }
