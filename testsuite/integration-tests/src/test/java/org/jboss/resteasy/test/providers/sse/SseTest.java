@@ -103,7 +103,7 @@ public class SseTest {
     @Test
     public void testBroadcast() throws Exception
     {
-       final CountDownLatch latch = new CountDownLatch(2);
+       final CountDownLatch latch = new CountDownLatch(4);
        Client client = new ResteasyClientBuilder().connectionPoolSize(10).build();
        WebTarget target = client.target(generateURL("/service/server-sent-events/subscribe"));
 
@@ -129,7 +129,9 @@ public class SseTest {
        eventSource2.subscribe(insse -> {Assert.assertTrue("", "This is broadcast message".equals(insse.readData()));});
        //To give some time to subscribe, otherwise the broadcast will execute before subscribe
        Thread.sleep(3000);
-       client.target(generateURL("/service/server-sent-events/broadcast")).request().post(Entity.entity("This is broadcast message", MediaType.SERVER_SENT_EVENTS)); 
+       WebTarget broadcastTarget = client.target(generateURL("/service/server-sent-events/broadcast"));
+       broadcastTarget.request().post(Entity.entity("This is broadcast message1", MediaType.SERVER_SENT_EVENTS)); 
+       broadcastTarget.request().post(Entity.entity("This is broadcast message2", MediaType.SERVER_SENT_EVENTS)); 
        Assert.assertTrue("Waiting for broadcast event to be delivered has timed out.", latch.await(10, TimeUnit.SECONDS));
        eventSource.close();
        eventSource2.close();

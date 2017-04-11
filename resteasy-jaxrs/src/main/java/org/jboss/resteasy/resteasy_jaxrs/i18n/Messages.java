@@ -731,5 +731,7 @@ public interface Messages
    @Message(id = BASE + 1088, value = "Failed to read data from InboundSseEvent")
    String failedToReadData();
    @Message(id = BASE + 1089, value = "Failed to create SseEventOutput")
-   String failedToCreateSseEventOutput();
+   String failedToCreateSseEventOutput(); 
+   @Message(id = BASE + 1090, value = "Broadcaster's state %s is invalid")
+   String broadCasterStateIsNotValid(String state);
 }

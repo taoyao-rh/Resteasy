@@ -12,18 +12,26 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import javax.ws.rs.Flow;
 import javax.ws.rs.Flow.Subscriber;
 import javax.ws.rs.Flow.Subscription;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.sse.OutboundSseEvent;
 import javax.ws.rs.sse.SseBroadcaster;
+
+import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
 
 
 public class SseBroadcasterImpl implements SseBroadcaster
 {
+   private enum State {
+      READY, OPEN, CLOSED
+   }
+   
    private final int THREADS = 5;
 
    private final Map<Subscriber<? super OutboundSseEvent>, Subscription> subscribers = new ConcurrentHashMap<>();
@@ -39,6 +47,8 @@ public class SseBroadcasterImpl implements SseBroadcaster
    private OutboundSseEventCallback eventHandler;
    
    private Flowable<OutboundSseEvent> flowable;
+   
+   private final AtomicReference<State> state = new AtomicReference<>(State.READY);
 
    //TODO : Look at use a concainter provided thread pool ?
    private ExecutorService service = Executors.newCachedThreadPool(runnable -> {
@@ -64,18 +74,21 @@ public class SseBroadcasterImpl implements SseBroadcaster
           };
           this.eventHandler = callback;
         }, BackpressureStrategy.BUFFER).share();
-     
+
    }
 
    @Override
    public void broadcast(OutboundSseEvent event)
    {
-      if (eventQueue.size() == 0) {
+      if (state.compareAndSet(State.READY, State.OPEN)) {
          for (int i = 0 ; i < THREADS; i++) {
             service.submit(() -> {
                try
                {
-                  this.eventHandler.send(eventQueue.take());
+                  while (state.get() == State.OPEN)
+                  {
+                     this.eventHandler.send(eventQueue.take());
+                  }
                }
                catch (Exception e)
                {
@@ -84,12 +97,27 @@ public class SseBroadcasterImpl implements SseBroadcaster
             });
          }
       }
-      eventQueue.add(event);
+      try
+      {
+         if (state.get() == State.OPEN)
+         {
+            eventQueue.put(event);
+         }
+         
+      }
+      catch (InterruptedException e)
+      {
+         throw new ProcessingException(e);
+      }
    }
 
    @Override
    public void close()
    {
+      if (!state.compareAndSet(State.OPEN, State.CLOSED))
+      {
+         throw new IllegalStateException(Messages.MESSAGES.broadCasterStateIsNotValid(state.get().name()));
+      }
       for (final Subscriber<? super OutboundSseEvent> output : subscribers.keySet())
       {
          try
