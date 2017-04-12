@@ -13,6 +13,7 @@ import javax.ws.rs.core.Response;
 /**
  * 
  * @author <a href="mailto:ron.sigal@jboss.com">Ron Sigal</a>
+ * @author <a href="mailto:ema@redhat.com">Jim Ma</a>
  * @date March 9, 2016
  */
 public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
@@ -23,11 +24,6 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
 
    public CompletionStageRxInvokerImpl()
    {
-   }
-
-   public CompletionStageRxInvokerImpl(ExecutorService executor)
-   {
-      this.executor = executor;
    }
 
    public CompletionStageRxInvokerImpl(ClientInvocationBuilder builder)
@@ -387,21 +383,24 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
       return this;
    }
 
-@Override
-public CompletionStage<Response> patch() {
-	// TODO Auto-generated method stub
-	return null;
-}
+   @Override
+   public CompletionStage<Response> patch()
+   {
+      // TODO Auto-generated method stub
+      return null;
+   }
 
-@Override
-public <T> CompletionStage<T> patch(Class<T> responseType) {
-	// TODO Auto-generated method stub
-	return null;
-}
+   @Override
+   public <T> CompletionStage<T> patch(Class<T> responseType)
+   {
+      // TODO Auto-generated method stub
+      return null;
+   }
 
-@Override
-public <T> CompletionStage<T> patch(GenericType<T> responseType) {
-	// TODO Auto-generated method stub
-	return null;
-}
+   @Override
+   public <T> CompletionStage<T> patch(GenericType<T> responseType)
+   {
+      // TODO Auto-generated method stub
+      return null;
+   }
 }

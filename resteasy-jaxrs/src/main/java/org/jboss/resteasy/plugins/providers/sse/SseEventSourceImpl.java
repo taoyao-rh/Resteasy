@@ -25,7 +25,8 @@ public class SseEventSourceImpl implements SseEventSource
 {
    public static final long RECONNECT_DEFAULT = 500;
 
-   private enum State {
+   private enum State 
+   {
       READY, OPEN, CLOSED
    }
 
@@ -40,7 +41,7 @@ public class SseEventSourceImpl implements SseEventSource
    
    public static class SourceBuilder extends Builder
    {
-      private WebTarget endpoint = null;
+     private WebTarget endpoint = null;
       private long reconnect = RECONNECT_DEFAULT;
       private String name = null;
       private boolean disableKeepAlive = false;

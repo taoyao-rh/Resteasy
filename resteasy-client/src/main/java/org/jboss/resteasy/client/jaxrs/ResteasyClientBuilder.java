@@ -679,14 +679,14 @@ public class ResteasyClientBuilder extends ClientBuilder
    }
 
    @Override
-   public ClientBuilder executorService(ExecutorService executorService)
+   //We need to remove the asyncExecutor in the future
+   public ResteasyClientBuilder executorService(ExecutorService executorService)
    {
-      this.asyncExecutor = executorService;
-      return this;
+      return asyncExecutor(executorService, false);
    }
 
    @Override
-   public ClientBuilder scheduledExecutorService(ScheduledExecutorService scheduledExecutorService)
+   public ResteasyClientBuilder scheduledExecutorService(ScheduledExecutorService scheduledExecutorService)
    {
       this.scheduledExecutorService = scheduledExecutorService;
       return this;

@@ -330,11 +330,19 @@ public class ClientInvocationBuilder implements Invocation.Builder
    }
 
    @Override
+   //spec api allows to use another RxInvoker with different implementation, not just CompletionFuture.
+   //is it necessary
    public <T extends RxInvoker> T rx(Class<T> clazz)
    {
       try
       {
-         return clazz.getConstructor().newInstance();
+         T rxInvoker = clazz.getConstructor().newInstance();
+         if (rxInvoker instanceof CompletionStageRxInvokerImpl) {
+            CompletionStageRxInvokerImpl completionstageInvoker = (CompletionStageRxInvokerImpl)rxInvoker;
+            completionstageInvoker.executor(executorService);
+            
+         }
+         return rxInvoker;
       }
       catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
             | NoSuchMethodException | SecurityException e)
