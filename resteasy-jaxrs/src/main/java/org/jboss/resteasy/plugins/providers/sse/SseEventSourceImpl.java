@@ -24,31 +24,29 @@ import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
 public class SseEventSourceImpl implements SseEventSource
 {
    public static final long RECONNECT_DEFAULT = 500;
-
-   private enum State 
-   {
-      READY, OPEN, CLOSED
-   }
-
    private WebTarget target = null;
    private final long reconnectDelay;
    private final boolean disableKeepAlive;
    private final ScheduledExecutorService executor;
-   private final AtomicReference<State> state = new AtomicReference<>(State.READY);
+   private enum State 
+   {
+      PENDING, OPEN, CLOSED
+   }
+   private final AtomicReference<State> state = new AtomicReference<>(State.PENDING);
    private final List<Consumer<InboundSseEvent>> onEventConsumers = new CopyOnWriteArrayList<>();
    private final List<Consumer<Throwable>> onErrorConsumers = new CopyOnWriteArrayList<>();
    private final List<Runnable> onCompleteConsumers = new CopyOnWriteArrayList<>();
    
    public static class SourceBuilder extends Builder
    {
-     private WebTarget endpoint = null;
+      private WebTarget target = null;
       private long reconnect = RECONNECT_DEFAULT;
       private String name = null;
       private boolean disableKeepAlive = false;
 
-      public SourceBuilder(final WebTarget endpoint)
+      public SourceBuilder(final WebTarget target)
       {
-         this.endpoint = endpoint;
+         this.target = target;
       }
 
       public Builder named(String name)
@@ -59,21 +57,21 @@ public class SseEventSourceImpl implements SseEventSource
 
       public SseEventSource build()
       {
-         return new SseEventSourceImpl(endpoint, name, reconnect, disableKeepAlive, false);
+         return new SseEventSourceImpl(target, name, reconnect, disableKeepAlive, false);
       }
 
       public SseEventSource open()
       {
          // why this api is required ? build can create SseEventSource and this can be invoked against SseEventSource
-         final SseEventSource source = new SseEventSourceImpl(endpoint, name, reconnect, disableKeepAlive, false);
+         final SseEventSource source = new SseEventSourceImpl(target, name, reconnect, disableKeepAlive, false);
          source.open();
          return source;
       }
 
       @Override
-      public Builder target(WebTarget endpoint)
+      public Builder target(WebTarget target)
       {
-         return new SourceBuilder(endpoint);
+         return new SourceBuilder(target);
       }
 
       @Override
@@ -84,14 +82,14 @@ public class SseEventSourceImpl implements SseEventSource
       }
    }
 
-   public SseEventSourceImpl(final WebTarget endpoint)
+   public SseEventSourceImpl(final WebTarget target)
    {
-      this(endpoint, true);
+      this(target, true);
    }
 
-   public SseEventSourceImpl(final WebTarget endpoint, final boolean open)
+   public SseEventSourceImpl(final WebTarget target, final boolean open)
    {
-      this(endpoint, null, RECONNECT_DEFAULT, true, open);
+      this(target, null, RECONNECT_DEFAULT, true, open);
    }
 
    private SseEventSourceImpl(final WebTarget target, String name, long reconnectDelay, final boolean disableKeepAlive,
@@ -104,11 +102,14 @@ public class SseEventSourceImpl implements SseEventSource
       this.target = target;
       this.reconnectDelay = reconnectDelay;
       this.disableKeepAlive = disableKeepAlive;
-
       if (name == null)
       {
          name = String.format("sse-event-source(%s)", target.getUri());
       }
+      //TODO:We probably need to move this class to resteasy-client module with InBoundSseEvent class
+      //or we back to put all sse stuff in a maven module like the initial implementation 
+      //now ClientBuilder is added an api to set scheduledExecutor. WebTarget is required 
+      //to cast to ResteasyWebTarget to call getResteasyclient and get scheduledExecutor here 
       this.executor = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());    
       if (open)
       {
@@ -141,7 +142,7 @@ public class SseEventSourceImpl implements SseEventSource
    @Override
    public void open()
    {
-      if (!state.compareAndSet(State.READY, State.OPEN))
+      if (!state.compareAndSet(State.PENDING, State.OPEN))
       {
          throw new IllegalStateException(Messages.MESSAGES.eventSourceIsNotReadyForOpen());
       }
@@ -149,7 +150,7 @@ public class SseEventSourceImpl implements SseEventSource
       executor.submit(handler);
       handler.awaitConnected();
    }
-
+   @Override
    public boolean isOpen()
    {
       return state.get() == State.OPEN;
@@ -204,21 +205,21 @@ public class SseEventSourceImpl implements SseEventSource
       if (state.getAndSet(State.CLOSED) != State.CLOSED)
       {
          executor.shutdownNow();
-      }
-      try
-      {
-         if (!executor.awaitTermination(timeout, unit))
+         try
          {
+            if (!executor.awaitTermination(timeout, unit))
+            {
+               return false;
+            }
+         }
+         catch (InterruptedException e)
+         {
+            onErrorConsumers.forEach(consumer -> {consumer.accept(e);});
+            Thread.currentThread().interrupt();
             return false;
          }
+         
       }
-      catch (InterruptedException e)
-      {
-         onErrorConsumers.forEach(consumer -> {consumer.accept(e);});
-         Thread.currentThread().interrupt();
-         return false;
-      }
-      
       return true;
    }
 

@@ -424,7 +424,7 @@ public class ResteasyClientBuilder extends ClientBuilder
       if (engine == null) {
          engine = HttpClientBuilder43.initDefaultEngine43(this);
       }
-      return new ResteasyClient(engine, executor, cleanupExecutor, config);
+      return new ResteasyClient(engine, executor, cleanupExecutor, scheduledExecutorService, config);
 
    }
 
