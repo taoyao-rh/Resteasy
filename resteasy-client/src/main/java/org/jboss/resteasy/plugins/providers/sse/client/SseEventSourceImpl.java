@@ -1,4 +1,4 @@
-package org.jboss.resteasy.plugins.providers.sse;
+package org.jboss.resteasy.plugins.providers.sse.client;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -18,6 +18,9 @@ import javax.ws.rs.sse.InboundSseEvent;
 import javax.ws.rs.sse.SseEventSource;
 
 import org.apache.http.HttpHeaders;
+import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
+import org.jboss.resteasy.plugins.providers.sse.SseConstants;
+import org.jboss.resteasy.plugins.providers.sse.SseEventInputImpl;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
 
 
@@ -106,11 +109,9 @@ public class SseEventSourceImpl implements SseEventSource
       {
          name = String.format("sse-event-source(%s)", target.getUri());
       }
-      //TODO:We probably need to move this class to resteasy-client module with InBoundSseEvent class
-      //or we back to put all sse stuff in a maven module like the initial implementation 
-      //now ClientBuilder is added an api to set scheduledExecutor. WebTarget is required 
-      //to cast to ResteasyWebTarget to call getResteasyclient and get scheduledExecutor here 
-      this.executor = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());    
+      ResteasyWebTarget resteasyWebTarget = (ResteasyWebTarget)target;
+      ScheduledExecutorService scheduledExecutor = resteasyWebTarget.getResteasyClient().getScheduledExecutor();
+      this.executor =  scheduledExecutor != null ? scheduledExecutor : Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());    
       if (open)
       {
          open();

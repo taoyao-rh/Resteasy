@@ -337,6 +337,7 @@ public class ClientInvocationBuilder implements Invocation.Builder
       try
       {
          T rxInvoker = clazz.getConstructor().newInstance();
+         //
          if (rxInvoker instanceof CompletionStageRxInvokerImpl) {
             CompletionStageRxInvokerImpl completionstageInvoker = (CompletionStageRxInvokerImpl)rxInvoker;
             completionstageInvoker.executor(executorService);
