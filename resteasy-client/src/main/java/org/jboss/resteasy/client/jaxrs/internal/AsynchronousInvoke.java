@@ -243,27 +243,32 @@ public class AsynchronousInvoke implements AsyncInvoker
       return invocation.submit(callback);
    }
 
-@Override
-public Future<Response> patch() {
-	// TODO Auto-generated method stub
-	return null;
-}
 
 @Override
-public <T> Future<T> patch(Class<T> responseType) {
-	// TODO Auto-generated method stub
-	return null;
+public Future<Response> patch(Entity<?> entity)
+{
+   // TODO Auto-generated method stub
+   return null;
 }
 
-@Override
-public <T> Future<T> patch(GenericType<T> responseType) {
-	// TODO Auto-generated method stub
-	return null;
-}
+   @Override
+   public <T> Future<T> patch(Entity<?> entity, Class<T> responseType)
+   {
+      // TODO Auto-generated method stub
+      return null;
+   }
 
-@Override
-public <T> Future<T> patch(InvocationCallback<T> callback) {
-	// TODO Auto-generated method stub
-	return null;
-}
+   @Override
+   public <T> Future<T> patch(Entity<?> entity, GenericType<T> responseType)
+   {
+      // TODO Auto-generated method stub
+      return null;
+   }
+
+   @Override
+   public <T> Future<T> patch(Entity<?> entity, InvocationCallback<T> callback)
+   {
+      // TODO Auto-generated method stub
+      return null;
+   }
 }

@@ -352,24 +352,22 @@ public class ClientInvocationBuilder implements Invocation.Builder
       }
    }
 
-
-
    @Override
-   public Response patch()
+   public Response patch(Entity<?> entity)
    {
       // TODO Auto-generated method stub
       return null;
    }
 
    @Override
-   public <T> T patch(Class<T> responseType)
+   public <T> T patch(Entity<?> entity, Class<T> responseType)
    {
       // TODO Auto-generated method stub
       return null;
    }
 
    @Override
-   public <T> T patch(GenericType<T> responseType)
+   public <T> T patch(Entity<?> entity, GenericType<T> responseType)
    {
       // TODO Auto-generated method stub
       return null;

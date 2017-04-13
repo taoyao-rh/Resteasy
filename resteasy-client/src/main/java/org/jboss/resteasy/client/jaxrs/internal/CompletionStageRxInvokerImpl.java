@@ -384,21 +384,21 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    }
 
    @Override
-   public CompletionStage<Response> patch()
+   public CompletionStage<Response> patch(Entity<?> entity)
    {
       // TODO Auto-generated method stub
       return null;
    }
 
    @Override
-   public <T> CompletionStage<T> patch(Class<T> responseType)
+   public <T> CompletionStage<T> patch(Entity<?> entity, Class<T> responseType)
    {
       // TODO Auto-generated method stub
       return null;
    }
 
    @Override
-   public <T> CompletionStage<T> patch(GenericType<T> responseType)
+   public <T> CompletionStage<T> patch(Entity<?> entity, GenericType<T> responseType)
    {
       // TODO Auto-generated method stub
       return null;
