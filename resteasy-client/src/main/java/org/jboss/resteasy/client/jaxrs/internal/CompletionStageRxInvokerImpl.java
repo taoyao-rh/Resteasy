@@ -386,21 +386,39 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    @Override
    public CompletionStage<Response> patch(Entity<?> entity)
    {
-      // TODO Auto-generated method stub
-      return null;
+      if (executor == null)
+      {
+         return CompletableFuture.supplyAsync(() -> builder.patch(entity));
+      }
+      else
+      {
+         return CompletableFuture.supplyAsync(() -> builder.patch(entity), executor);
+      }
    }
 
    @Override
    public <T> CompletionStage<T> patch(Entity<?> entity, Class<T> responseType)
    {
-      // TODO Auto-generated method stub
-      return null;
+      if (executor == null)
+      {
+         return CompletableFuture.supplyAsync(() -> builder.patch(entity, responseType));
+      }
+      else
+      {
+         return CompletableFuture.supplyAsync(() -> builder.patch(entity, responseType), executor);
+      }
    }
 
    @Override
    public <T> CompletionStage<T> patch(Entity<?> entity, GenericType<T> responseType)
    {
-      // TODO Auto-generated method stub
-      return null;
+      if (executor == null)
+      {
+         return CompletableFuture.supplyAsync(() -> builder.patch(entity, responseType));
+      }
+      else
+      {
+         return CompletableFuture.supplyAsync(() -> builder.patch(entity, responseType), executor);
+      }
    }
 }
