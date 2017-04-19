@@ -17,7 +17,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/students")
 public class StudentResource
 {
-   public Map<Long, Student> studentsMap = new java.util.concurrent.ConcurrentHashMap<Long, Student>();
+   public static Map<Long, Student> studentsMap = new java.util.concurrent.ConcurrentHashMap<Long, Student>();
 
    public StudentResource()
    {

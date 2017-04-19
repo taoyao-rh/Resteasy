@@ -56,28 +56,28 @@ public class StudentPatchTest
    }
 
    @Test
-   @Ignore
+   //@Ignore
    public void testPatchStudent() throws Exception
    {
       ResteasyClient client = new ResteasyClientBuilder().connectionPoolSize(10).build();
+ 
       WebTarget base = client.target(generateURL("/students"));
       //add a student
       Student newStudent = new Student().setId(1L).setName("John").setSchool("SchoolName1");
-      Response response = base.request().post(Entity.<Student> entity(newStudent, MediaType.APPLICATION_JSON));
+      Response response = base.request().post(Entity.<Student> entity(newStudent, MediaType.APPLICATION_JSON_TYPE));
       Student s = response.readEntity(Student.class);
-      //udpate with patch
+      Assert.assertNotNull("Add student failed", s);
+
 
       WebTarget patchTarget = client.target(generateURL("/students/1"));
       javax.json.JsonArray patchRequest = Json.createArrayBuilder()
             .add(Json.createObjectBuilder().add("op", "replace").add("path", "/name").add("value", "Mike").build())
             .build();
-      patchTarget.request().patch(Entity.entity(patchRequest, MediaType.APPLICATION_JSON), Student.class);
+      patchTarget.request().patch(Entity.entity(patchRequest, MediaType.APPLICATION_JSON_PATCH_JSON));
 
-      //verify the patch update result;
-      Student student = patchTarget.request().get().readEntity(Student.class);
-      //Change expceted value to Mike after patch is implemented
-      Assert.assertEquals("Patch student doesn't work, expected student name is udpated to Mike", "Mike",
-            student.getName());
-
+      WebTarget getTarget = client.target(generateURL("/students/1"));
+      Response getResponse = getTarget.request().get();
+      Student patchedStudent = getResponse.readEntity(Student.class);
+      Assert.assertEquals("Student uddate with patch method doesn't work, expect student name is changed to Mike", "Mike", patchedStudent.getName());
    }
 }
