@@ -68,13 +68,14 @@ public class StudentPatchTest
       Student s = response.readEntity(Student.class);
       Assert.assertNotNull("Add student failed", s);
 
-
+      //patch replace name field
       WebTarget patchTarget = client.target(generateURL("/students/1"));
       javax.json.JsonArray patchRequest = Json.createArrayBuilder()
             .add(Json.createObjectBuilder().add("op", "replace").add("path", "/name").add("value", "Mike").build())
             .build();
       patchTarget.request().patch(Entity.entity(patchRequest, MediaType.APPLICATION_JSON_PATCH_JSON));
 
+      //get and verify
       WebTarget getTarget = client.target(generateURL("/students/1"));
       Response getResponse = getTarget.request().get();
       Student patchedStudent = getResponse.readEntity(Student.class);
