@@ -53,8 +53,9 @@ public class SseTest {
        WebTarget target = client.target(generateURL("/service/server-sent-events"));
 
        SseEventSource eventSource = new SseEventSourceImpl.SourceBuilder(target).build();
-       eventSource.subscribe(event -> {
+       eventSource.register(event -> {
             results.add(event.toString());
+            System.out.println(event.toString());
             latch.countDown();
           });
        eventSource.open();
@@ -64,7 +65,7 @@ public class SseTest {
        for (int counter = 0; counter < 5; counter++)
        {
           messageTarget.request().post(Entity.text("message " + counter));
-       } 
+       }
        Assert.assertTrue("Waiting for event to be delivered has timed out.", latch.await(30, TimeUnit.SECONDS));
        messageTarget.request().delete();
        messageClient.close();
@@ -73,7 +74,7 @@ public class SseTest {
        
        Assert.assertTrue("5 messages are expected, but is : " + results.size(), results.size() == 5);
     }
-    
+        
     @Test
     public void testSseEvent() throws Exception
     {
@@ -83,7 +84,7 @@ public class SseTest {
        WebTarget target = client.target(generateURL("/service/server-sent-events")).path("domains").path("1");
 
        SseEventSource eventSource = new SseEventSourceImpl.SourceBuilder(target).build();
-       eventSource.subscribe(event -> {
+       eventSource.register(event -> {
           results.add(event.readData());
           latch.countDown();
        });
@@ -108,7 +109,7 @@ public class SseTest {
        WebTarget target = client.target(generateURL("/service/server-sent-events/subscribe"));
 
        SseEventSource eventSource = new SseEventSourceImpl.SourceBuilder(target).build();
-       eventSource.subscribe(event -> {
+       eventSource.register(event -> {
           System.out.println("Client one : " + event.readData());
           latch.countDown();
        });
@@ -119,14 +120,14 @@ public class SseTest {
        WebTarget target2 = client2.target(generateURL("/service/sse/subscribe"));
 
        SseEventSource eventSource2 = new SseEventSourceImpl.SourceBuilder(target2).build();
-       eventSource2.subscribe(event -> {
+       eventSource2.register(event -> {
           System.out.println("Client two : " + event.readData());
           latch.countDown();
        });
        eventSource2.open();
        
        //Test for eventSource subscriber
-       eventSource2.subscribe(insse -> {Assert.assertTrue("", "This is broadcast message".equals(insse.readData()));});
+       eventSource2.register(insse -> {Assert.assertTrue("", "This is broadcast message".equals(insse.readData()));});
        //To give some time to subscribe, otherwise the broadcast will execute before subscribe
        Thread.sleep(3000);
        client.target(generateURL("/service/server-sent-events/broadcast")).request().post(Entity.entity("This is broadcast message", MediaType.SERVER_SENT_EVENTS)); 

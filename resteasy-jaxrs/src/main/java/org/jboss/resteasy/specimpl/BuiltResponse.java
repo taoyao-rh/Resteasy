@@ -48,6 +48,7 @@ public class BuiltResponse extends Response
    protected Type genericType;
    protected HeaderValueProcessor processor;
    protected boolean isClosed;
+   protected String reasonPhrase;
 
    public BuiltResponse()
    {
@@ -113,6 +114,9 @@ public class BuiltResponse extends Response
             @Override
             public String getReasonPhrase()
             {
+               if (reasonPhrase != null) {
+                  return reasonPhrase;
+               }
                return "Unknown Code";
             }
          };
@@ -153,6 +157,11 @@ public class BuiltResponse extends Response
    public void setStatus(int status)
    {
       this.status = status;
+   }
+   
+   public void setReasonPhrase(String reasonPhrase)
+   {
+      this.reasonPhrase = reasonPhrase;
    }
 
    public void setMetadata(MultivaluedMap<String, Object> metadata)

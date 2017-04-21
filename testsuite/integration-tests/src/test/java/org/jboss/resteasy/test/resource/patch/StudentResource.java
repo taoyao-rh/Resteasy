@@ -1,6 +1,5 @@
 package org.jboss.resteasy.test.resource.patch;
 
-import java.util.Collection;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;

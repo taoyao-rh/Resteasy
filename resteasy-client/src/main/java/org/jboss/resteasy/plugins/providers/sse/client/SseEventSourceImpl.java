@@ -163,14 +163,14 @@ public class SseEventSourceImpl implements SseEventSource
       this.close(5, TimeUnit.SECONDS);
    }
 
-   public void subscribe(Consumer<InboundSseEvent> onEvent) {
+   public void register(Consumer<InboundSseEvent> onEvent) {
       if (onEvent == null) {
          throw new IllegalArgumentException();
       }
       onEventConsumers.add(onEvent);
    }
 
-   public void subscribe(Consumer<InboundSseEvent> onEvent,
+   public void register(Consumer<InboundSseEvent> onEvent,
                   Consumer<Throwable> onError) {
       if (onEvent == null) {
          throw new IllegalArgumentException();
@@ -182,7 +182,7 @@ public class SseEventSourceImpl implements SseEventSource
       onErrorConsumers.add(onError);
    }
 
-   public void subscribe(Consumer<InboundSseEvent> onEvent,
+   public void register(Consumer<InboundSseEvent> onEvent,
                   Consumer<Throwable> onError,
                   Runnable onComplete) {
       if (onEvent == null) {
@@ -347,5 +347,4 @@ public class SseEventSourceImpl implements SseEventSource
          }
       }
    }
-
 }

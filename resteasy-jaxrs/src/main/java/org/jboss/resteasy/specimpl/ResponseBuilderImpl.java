@@ -13,8 +13,8 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
-
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
 
 import java.lang.annotation.Annotation;
@@ -37,6 +37,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder
    protected Object entity;
    protected Annotation[] entityAnnotations;
    protected int status = -1;
+   protected String reasonPhrase;
    protected Headers<Object> metadata = new Headers<Object>();
 
    @Override
@@ -44,7 +45,12 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder
    {
       if (status == -1 && entity == null) status = 204;
       else if (status == -1) status = 200;
-      return new BuiltResponse(status, metadata, entity, entityAnnotations);
+      BuiltResponse response = new BuiltResponse(status, metadata, entity, entityAnnotations);
+      if (reasonPhrase != null)
+      {
+         response.setReasonPhrase(reasonPhrase);
+      }
+      return response;
    }
 
    @Override
@@ -55,6 +61,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder
       impl.entity = entity;
       impl.status = status;
       impl.entityAnnotations = entityAnnotations;
+      impl.reasonPhrase  = reasonPhrase;
       return impl;
    }
 
@@ -393,6 +400,14 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder
       if (headers == null) return this;
       metadata.putAll(headers);
       return this;
+   }
+
+   @Override
+   public ResponseBuilder status(int status, String reasonPhrase)
+   {
+       this.status = status;
+       this.reasonPhrase = reasonPhrase;
+       return this;
    }
 
 }
