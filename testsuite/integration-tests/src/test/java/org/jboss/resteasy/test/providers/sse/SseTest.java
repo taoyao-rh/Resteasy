@@ -23,6 +23,7 @@ import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.Assert;
+//import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -45,6 +46,7 @@ public class SseTest {
     }
     
     @Test
+    //@Ignore
     public void testAddMessage() throws Exception
     {
        final CountDownLatch latch = new CountDownLatch(5);
@@ -76,6 +78,7 @@ public class SseTest {
     }
         
     @Test
+    //@Ignore
     public void testSseEvent() throws Exception
     {
        final List<String> results = new ArrayList<String>();
@@ -118,7 +121,7 @@ public class SseTest {
             
        Client client2 = new ResteasyClientBuilder().build();
        WebTarget target2 = client2.target(generateURL("/service/sse/subscribe"));
-
+       //WebTarget target2 = client2.target(generateURL("/service/server-sent-events/subscribe"));
        SseEventSource eventSource2 = new SseEventSourceImpl.SourceBuilder(target2).build();
        eventSource2.register(event -> {
           System.out.println("Client two : " + event.readData());
@@ -131,7 +134,7 @@ public class SseTest {
        //To give some time to subscribe, otherwise the broadcast will execute before subscribe
        Thread.sleep(3000);
        client.target(generateURL("/service/server-sent-events/broadcast")).request().post(Entity.entity("This is broadcast message", MediaType.SERVER_SENT_EVENTS)); 
-       Assert.assertTrue("Waiting for broadcast event to be delivered has timed out.", latch.await(10, TimeUnit.SECONDS));
+       Assert.assertTrue("Waiting for broadcast event to be delivered has timed out.", latch.await(20, TimeUnit.SECONDS));
        eventSource.close();
        eventSource2.close();
        client.close();
