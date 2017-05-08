@@ -3,6 +3,7 @@ package org.jboss.resteasy.client.jaxrs.internal;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.core.interception.jaxrs.AbstractWriterInterceptorContext;
 import org.jboss.resteasy.core.interception.jaxrs.ClientWriterInterceptorContext;
+import org.jboss.resteasy.plugins.providers.sse.SseEventInputImpl;
 import org.jboss.resteasy.specimpl.MultivaluedTreeMap;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.DelegatingOutputStream;
@@ -126,6 +127,10 @@ public class ClientInvocation implements Invocation
                      ClientResponse clientResponse = (ClientResponse)response;
                      clientResponse.noReleaseConnection();
                   }
+               }
+               if (SseEventInputImpl.class.equals(responseType.getRawType()) && response instanceof ClientResponse)
+               {
+                  ((ClientResponse)response).noReleaseConnection();
                }
                return rtn;
 
