@@ -27,6 +27,7 @@ import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
 public class SseEventSourceImpl implements SseEventSource
 {
    public static final long RECONNECT_DEFAULT = 500;
+   private static final long CLOSE_WAIT = 30;
    private WebTarget target = null;
    private final long reconnectDelay;
    private final boolean disableKeepAlive;
@@ -160,7 +161,7 @@ public class SseEventSourceImpl implements SseEventSource
    @Override
    public void close()
    {
-      this.close(5, TimeUnit.SECONDS);
+      this.close(CLOSE_WAIT, TimeUnit.SECONDS);
    }
 
    public void register(Consumer<InboundSseEvent> onEvent) {
@@ -205,6 +206,8 @@ public class SseEventSourceImpl implements SseEventSource
    {
       if (state.getAndSet(State.CLOSED) != State.CLOSED)
       {
+         ResteasyWebTarget resteasyWebTarget = (ResteasyWebTarget)target;
+         resteasyWebTarget.getResteasyClient().close();
          executor.shutdownNow();
          try
          {
