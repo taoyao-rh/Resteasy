@@ -12,6 +12,8 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.RxInvoker;
+import javax.ws.rs.client.RxInvokerProvider;
+import javax.ws.rs.client.SyncInvoker;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -76,7 +78,9 @@ public class RxInvokerTest extends ClientTestBase
        admin.reload();
        mgmtClient.close();
        client = ClientBuilder.newClient();
+       client.register(TestRxInvokerProvider.class);
        executorClient = ClientBuilder.newBuilder().executorService(EXECUTOR).build();
+       executorClient.register(TestRxInvokerProvider.class);
    }
 
    @AfterClass
@@ -115,17 +119,34 @@ public class RxInvokerTest extends ClientTestBase
    {
       public static volatile boolean used;
       
-      public TestRxInvoker()
+      public TestRxInvoker(SyncInvoker syncInvoker, ExecutorService executorService)
       {
-         used = true;
+         super(syncInvoker, executorService);
+         used = true;     
       }
+   }
+   
+   public static class TestRxInvokerProvider implements RxInvokerProvider<TestRxInvoker> {
+
+      @Override
+      public boolean isProviderFor(Class<?> clazz)
+      {
+         return TestRxInvoker.class.equals(clazz);
+      }
+
+      @Override
+      public TestRxInvoker getRxInvoker(SyncInvoker syncInvoker, ExecutorService executorService)
+      {
+         return new TestRxInvoker(syncInvoker, executorService);
+      }
+      
    }
 
    static RxInvoker<?> buildInvoker(Builder builder, boolean useCustomInvoker) throws Exception
    {
       if (useCustomInvoker)
       {
-         return builder.rx(TestRxInvoker.class).builder(builder);
+         return builder.rx(TestRxInvoker.class);
       }
       else
       {

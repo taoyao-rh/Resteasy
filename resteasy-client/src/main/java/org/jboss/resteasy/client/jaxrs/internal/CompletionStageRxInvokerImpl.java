@@ -6,7 +6,7 @@ import java.util.concurrent.ExecutorService;
 
 import javax.ws.rs.client.CompletionStageRxInvoker;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.SyncInvoker;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
@@ -18,7 +18,7 @@ import javax.ws.rs.core.Response;
  */
 public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
 {
-   private Builder builder;
+   private SyncInvoker invoker;
 
    private ExecutorService executor;
 
@@ -26,14 +26,14 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
    }
 
-   public CompletionStageRxInvokerImpl(ClientInvocationBuilder builder)
+   public CompletionStageRxInvokerImpl(SyncInvoker invoker)
    {
-      this.builder = builder;
+      this.invoker = invoker;
    }
 
-   public CompletionStageRxInvokerImpl(ClientInvocationBuilder builder, ExecutorService executor)
+   public CompletionStageRxInvokerImpl(SyncInvoker invoker, ExecutorService executor)
    {
-      this.builder = builder;
+      this.invoker = invoker;
       this.executor = executor;
    }
 
@@ -42,11 +42,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.get());
+         return CompletableFuture.supplyAsync(() -> invoker.get());
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.get(), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.get(), executor);
       }
 
    }
@@ -56,11 +56,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.get(responseType));
+         return CompletableFuture.supplyAsync(() -> invoker.get(responseType));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.get(responseType), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.get(responseType), executor);
       }
    }
 
@@ -69,11 +69,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.get(responseType));
+         return CompletableFuture.supplyAsync(() -> invoker.get(responseType));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.get(responseType), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.get(responseType), executor);
       }
    }
 
@@ -82,11 +82,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.put(entity));
+         return CompletableFuture.supplyAsync(() -> invoker.put(entity));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.put(entity), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.put(entity), executor);
       }
    }
 
@@ -95,11 +95,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.put(entity, clazz));
+         return CompletableFuture.supplyAsync(() -> invoker.put(entity, clazz));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.put(entity, clazz), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.put(entity, clazz), executor);
       }
    }
 
@@ -108,11 +108,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.put(entity, type));
+         return CompletableFuture.supplyAsync(() -> invoker.put(entity, type));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.put(entity, type), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.put(entity, type), executor);
       }
    }
 
@@ -121,11 +121,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.post(entity));
+         return CompletableFuture.supplyAsync(() -> invoker.post(entity));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.post(entity), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.post(entity), executor);
       }
    }
 
@@ -134,11 +134,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.post(entity, clazz));
+         return CompletableFuture.supplyAsync(() -> invoker.post(entity, clazz));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.post(entity, clazz), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.post(entity, clazz), executor);
       }
    }
 
@@ -147,11 +147,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.post(entity, type));
+         return CompletableFuture.supplyAsync(() -> invoker.post(entity, type));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.post(entity, type), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.post(entity, type), executor);
       }
    }
 
@@ -160,11 +160,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.delete());
+         return CompletableFuture.supplyAsync(() -> invoker.delete());
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.delete(), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.delete(), executor);
       }
    }
 
@@ -173,11 +173,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.delete(responseType));
+         return CompletableFuture.supplyAsync(() -> invoker.delete(responseType));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.delete(responseType), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.delete(responseType), executor);
       }
    }
 
@@ -186,11 +186,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.delete(responseType));
+         return CompletableFuture.supplyAsync(() -> invoker.delete(responseType));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.delete(responseType), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.delete(responseType), executor);
       }
    }
 
@@ -199,11 +199,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.head());
+         return CompletableFuture.supplyAsync(() -> invoker.head());
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.head(), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.head(), executor);
       }
    }
 
@@ -212,11 +212,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.options());
+         return CompletableFuture.supplyAsync(() -> invoker.options());
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.options(), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.options(), executor);
       }
    }
 
@@ -225,10 +225,10 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.options(responseType));
+         return CompletableFuture.supplyAsync(() -> invoker.options(responseType));
       }
       {
-         return CompletableFuture.supplyAsync(() -> builder.options(responseType), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.options(responseType), executor);
       }
    }
 
@@ -237,11 +237,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.options(responseType));
+         return CompletableFuture.supplyAsync(() -> invoker.options(responseType));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.options(responseType), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.options(responseType), executor);
       }
    }
 
@@ -250,11 +250,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.trace());
+         return CompletableFuture.supplyAsync(() -> invoker.trace());
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.trace(), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.trace(), executor);
       }
    }
 
@@ -263,11 +263,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.trace(responseType));
+         return CompletableFuture.supplyAsync(() -> invoker.trace(responseType));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.trace(responseType), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.trace(responseType), executor);
       }
    }
 
@@ -276,11 +276,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.trace(responseType));
+         return CompletableFuture.supplyAsync(() -> invoker.trace(responseType));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.trace(responseType), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.trace(responseType), executor);
       }
    }
 
@@ -289,11 +289,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.method(name));
+         return CompletableFuture.supplyAsync(() -> invoker.method(name));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.method(name), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.method(name), executor);
       }
    }
 
@@ -302,11 +302,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.method(name, responseType));
+         return CompletableFuture.supplyAsync(() -> invoker.method(name, responseType));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.method(name, responseType), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.method(name, responseType), executor);
       }
    }
 
@@ -315,11 +315,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.method(name, responseType));
+         return CompletableFuture.supplyAsync(() -> invoker.method(name, responseType));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.method(name, responseType), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.method(name, responseType), executor);
       }
    }
 
@@ -328,10 +328,10 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.method(name, entity));
+         return CompletableFuture.supplyAsync(() -> invoker.method(name, entity));
       }
       {
-         return CompletableFuture.supplyAsync(() -> builder.method(name, entity), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.method(name, entity), executor);
       }
    }
 
@@ -340,11 +340,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.method(name, entity, responseType));
+         return CompletableFuture.supplyAsync(() -> invoker.method(name, entity, responseType));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.method(name, entity, responseType), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.method(name, entity, responseType), executor);
       }
    }
 
@@ -353,22 +353,22 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.method(name, entity, responseType));
+         return CompletableFuture.supplyAsync(() -> invoker.method(name, entity, responseType));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.method(name, entity, responseType), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.method(name, entity, responseType), executor);
       }
    }
 
-   public Builder getBuilder()
+   public SyncInvoker getinvoker()
    {
-      return builder;
+      return invoker;
    }
 
-   public CompletionStageRxInvoker builder(Builder builder)
+   public CompletionStageRxInvoker invoker(SyncInvoker invoker)
    {
-      this.builder = builder;
+      this.invoker = invoker;
       return this;
    }
 
@@ -388,11 +388,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.patch(entity));
+         return CompletableFuture.supplyAsync(() -> invoker.patch(entity));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.patch(entity), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.patch(entity), executor);
       }
    }
 
@@ -401,11 +401,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.patch(entity, responseType));
+         return CompletableFuture.supplyAsync(() -> invoker.patch(entity, responseType));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.patch(entity, responseType), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.patch(entity, responseType), executor);
       }
    }
 
@@ -414,11 +414,11 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
    {
       if (executor == null)
       {
-         return CompletableFuture.supplyAsync(() -> builder.patch(entity, responseType));
+         return CompletableFuture.supplyAsync(() -> invoker.patch(entity, responseType));
       }
       else
       {
-         return CompletableFuture.supplyAsync(() -> builder.patch(entity, responseType), executor);
+         return CompletableFuture.supplyAsync(() -> invoker.patch(entity, responseType), executor);
       }
    }
 }

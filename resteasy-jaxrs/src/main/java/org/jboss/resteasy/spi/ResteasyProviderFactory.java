@@ -39,11 +39,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseFilter;
+import javax.ws.rs.client.RxInvokerProvider;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.core.*;
-import javax.ws.rs.core.Link;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -174,6 +174,8 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
    protected Map<String, Object> properties;
    protected Set<Class<?>> providerClasses;
    protected Set<Object> providerInstances;
+   protected Set<RxInvokerProvider> rxInvokerProviderInsances;
+   protected Set<Class<?>> rxInvokerProviderClasses;
    protected Set<Class<?>> featureClasses;
    protected Set<Object> featureInstances;
 
@@ -212,7 +214,8 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
       properties = new ConcurrentHashMap<String, Object>();
       properties.putAll(parent.getProperties());
       enabledFeatures = new CopyOnWriteArraySet<Feature>();
-      
+      rxInvokerProviderClasses = new CopyOnWriteArraySet<Class<?>>();
+      rxInvokerProviderInsances = new CopyOnWriteArraySet<RxInvokerProvider>();
       if (local)
       {
          classContracts = new ConcurrentHashMap<Class<?>, Map<Class<?>, Integer>>();
@@ -223,6 +226,8 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
             classContracts.putAll(parent.classContracts);
             properties.putAll(parent.properties);
             enabledFeatures.addAll(parent.enabledFeatures);
+            rxInvokerProviderClasses.addAll(parent.rxInvokerProviderClasses);
+            rxInvokerProviderInsances.addAll(parent.rxInvokerProviderInsances);
          }
       }
    }
@@ -235,6 +240,8 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
       properties = new ConcurrentHashMap<String, Object>();
       featureClasses = new CopyOnWriteArraySet<Class<?>>();
       featureInstances = new CopyOnWriteArraySet<Object>();
+      rxInvokerProviderClasses = new CopyOnWriteArraySet<Class<?>>();
+      rxInvokerProviderInsances = new CopyOnWriteArraySet<RxInvokerProvider>();
       providerClasses = new CopyOnWriteArraySet<Class<?>>();
       providerInstances = new CopyOnWriteArraySet<Object>();
       classContracts = new ConcurrentHashMap<Class<?>, Map<Class<?>, Integer>>();
@@ -1581,6 +1588,20 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
          newContracts.put(Feature.class, priority);
 
       }
+      if (isA(provider, RxInvokerProvider.class, contracts))
+      {
+         try
+         {
+            rxInvokerProviderClasses.add(provider);
+            rxInvokerProviderInsances.add((RxInvokerProvider)this.injectedInstance(provider));
+         }
+         catch (Exception e)
+         {  e.printStackTrace();
+            throw new RuntimeException(Messages.MESSAGES.unableToInstantiateRxInvokerProvider(), e);
+         }
+      }
+      
+      
    }
 
    /**
@@ -1862,6 +1883,16 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
          if (mapper == null) exceptionType = exceptionType.getSuperclass();
       }
       return mapper;
+   }
+   
+   public Set<RxInvokerProvider> getRxInovkerProviders()
+   {
+      return rxInvokerProviderInsances;
+   }
+
+   public Set<Class<?>> getRxInvokerProviderClasses()
+   {
+      return this.rxInvokerProviderClasses;
    }
 
    public MediaType getConcreteMediaTypeFromMessageBodyWriters(Class type, Type genericType, Annotation[] annotations, MediaType mediaType)
