@@ -678,6 +678,24 @@ public class RxInvokerTest extends ClientTestBase
       Assert.assertEquals(useCustomInvoker, invoker instanceof TestRxInvoker && TestRxInvoker.used);
    }
 
+
+   @Test
+   public void testGetRxInovkerWithoutRegister() throws Exception
+   {
+      Builder builder = ClientBuilder.newClient().target(generateURL("/methodEntity")).request();
+      try
+      {
+         builder.rx(TestRxInvoker.class);
+         Assert.fail("Exception is expected");
+      }
+      catch (IllegalStateException e)
+      {
+         Assert.assertTrue("RxInvokerProvider not registered exception is expected ",
+               e.getMessage().contains("not registered"));
+      }
+   }
+   
+   
    private Client getClient(boolean useExecutor)
    {
       if (useExecutor)

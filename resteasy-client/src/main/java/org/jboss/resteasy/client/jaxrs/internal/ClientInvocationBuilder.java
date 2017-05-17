@@ -339,14 +339,13 @@ public class ClientInvocationBuilder implements Invocation.Builder
    @Override
    public <T extends RxInvoker> T rx(Class<T> clazz)
    {
-      T  rxInvoker = null;
       Set<RxInvokerProvider> providerInstances= invocation.getClientConfiguration().getProviderFactory().getRxInovkerProviders();
       for (RxInvokerProvider provider : providerInstances) {
          if (provider.isProviderFor(clazz)) {
              return (T)provider.getRxInvoker(this, executorService);
          }
       }
-      return rxInvoker;
+      throw new IllegalStateException(Messages.MESSAGES.rxInvokerProviderIsNotRegistered(clazz.getSimpleName()));
    }
 
    @Override
