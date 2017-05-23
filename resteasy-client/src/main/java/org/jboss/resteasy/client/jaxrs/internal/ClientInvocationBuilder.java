@@ -337,15 +337,9 @@ public class ClientInvocationBuilder implements Invocation.Builder
 
    @SuppressWarnings("unchecked")
    @Override
-   public <T extends RxInvoker> T rx(Class<T> clazz)
+   public <T extends RxInvoker> T rx(RxInvokerProvider provider)
    {
-      Set<RxInvokerProvider> providerInstances= invocation.getClientConfiguration().getProviderFactory().getRxInovkerProviders();
-      for (RxInvokerProvider provider : providerInstances) {
-         if (provider.isProviderFor(clazz)) {
-             return (T)provider.getRxInvoker(this, executorService);
-         }
-      }
-      throw new IllegalStateException(Messages.MESSAGES.rxInvokerProviderIsNotRegistered(clazz.getSimpleName()));
+       return (T)provider.getRxInvoker(this, this.executorService);
    }
 
    @Override

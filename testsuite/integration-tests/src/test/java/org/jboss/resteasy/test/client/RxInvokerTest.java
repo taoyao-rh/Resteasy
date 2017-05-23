@@ -31,6 +31,7 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.wildfly.extras.creaper.core.online.OnlineManagementClient;
@@ -56,6 +57,7 @@ public class RxInvokerTest extends ClientTestBase
    private static ModelNode origDisallowedMethodsValue;
    private static Client client;
    private static Client executorClient;
+   private static TestRxInvokerProvider testRxInvokerProvider = new TestRxInvokerProvider();
 
    @Deployment
    public static Archive<?> deploy() {
@@ -78,9 +80,9 @@ public class RxInvokerTest extends ClientTestBase
        admin.reload();
        mgmtClient.close();
        client = ClientBuilder.newClient();
-       client.register(TestRxInvokerProvider.class);
+       //client.register(TestRxInvokerProvider.class);
        executorClient = ClientBuilder.newBuilder().executorService(EXECUTOR).build();
-       executorClient.register(TestRxInvokerProvider.class);
+       //executorClient.register(TestRxInvokerProvider.class);
    }
 
    @AfterClass
@@ -129,12 +131,6 @@ public class RxInvokerTest extends ClientTestBase
    public static class TestRxInvokerProvider implements RxInvokerProvider<TestRxInvoker> {
 
       @Override
-      public boolean isProviderFor(Class<?> clazz)
-      {
-         return TestRxInvoker.class.equals(clazz);
-      }
-
-      @Override
       public TestRxInvoker getRxInvoker(SyncInvoker syncInvoker, ExecutorService executorService)
       {
          return new TestRxInvoker(syncInvoker, executorService);
@@ -146,7 +142,7 @@ public class RxInvokerTest extends ClientTestBase
    {
       if (useCustomInvoker)
       {
-         return builder.rx(TestRxInvoker.class);
+         return builder.rx(testRxInvokerProvider);
       }
       else
       {
@@ -680,12 +676,13 @@ public class RxInvokerTest extends ClientTestBase
 
 
    @Test
+   @Ignore
    public void testGetRxInovkerWithoutRegister() throws Exception
    {
       Builder builder = ClientBuilder.newClient().target(generateURL("/methodEntity")).request();
       try
       {
-         builder.rx(TestRxInvoker.class);
+         builder.rx(testRxInvokerProvider);
          Assert.fail("Exception is expected");
       }
       catch (IllegalStateException e)
