@@ -43,7 +43,7 @@ public class JAXRS21PatchTest extends ClientTestBase {
         client.close();
     }
 
-    @Test
+ /*   @Test
     public void testMethods() throws Exception {
         {
             Response res = client.target(generateURL("/test")).request().patch(Entity.text("hello"));
@@ -55,7 +55,7 @@ public class JAXRS21PatchTest extends ClientTestBase {
             String entity = client.target(generateURL("/test")).request().patch(Entity.text("hello"), String.class);
             Assert.assertEquals("patch hello", entity);
         }
-    }
+    }*/
 
     @Test
     public void testInvoke() throws Exception {

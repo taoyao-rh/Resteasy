@@ -102,6 +102,7 @@ public class ResteasyClientBuilder extends ClientBuilder
    protected ClientHttpEngine httpEngine;
    protected int connectionPoolSize;
    protected int maxPooledPerRoute = 0;
+   //time to live
    protected long connectionTTL = -1;
    protected TimeUnit connectionTTLUnit = TimeUnit.MILLISECONDS;
    protected long socketTimeout = -1;
@@ -689,6 +690,22 @@ public class ResteasyClientBuilder extends ClientBuilder
    public ResteasyClientBuilder scheduledExecutorService(ScheduledExecutorService scheduledExecutorService)
    {
       this.scheduledExecutorService = scheduledExecutorService;
+      return this;
+   }
+
+   @Override
+   public ClientBuilder connectTimeout(long timeout, TimeUnit unit)
+   {
+      this.establishConnectionTimeout = timeout;
+      this.establishConnectionTimeoutUnits = unit;
+      return this;
+   }
+
+   @Override
+   public ClientBuilder readTimeout(long timeout, TimeUnit unit)
+   {
+      this.socketTimeout = timeout;
+      this.socketTimeoutUnits = unit;
       return this;
    }
 }

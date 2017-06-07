@@ -348,21 +348,21 @@ public class ClientInvocationBuilder implements Invocation.Builder
       throw new IllegalStateException(Messages.MESSAGES.rxInvokerProviderIsNotRegistered(clazz.getSimpleName()));
    }
 
-   @Override
+/*
    public Response patch(Entity<?> entity)
    {
       return build(HttpMethod.PATCH, entity).invoke();
    }
 
-   @Override
+
    public <T> T patch(Entity<?> entity, Class<T> responseType)
    {
       return build(HttpMethod.PATCH, entity).invoke(responseType);
    }
 
-   @Override
+
    public <T> T patch(Entity<?> entity, GenericType<T> responseType)
    {
       return build(HttpMethod.PATCH, entity).invoke(responseType);
-   }
+   }*/
 }

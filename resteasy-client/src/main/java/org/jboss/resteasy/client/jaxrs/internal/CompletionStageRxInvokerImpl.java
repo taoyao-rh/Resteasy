@@ -383,7 +383,8 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
       return this;
    }
 
-   @Override
+   /*
+
    public CompletionStage<Response> patch(Entity<?> entity)
    {
       if (executor == null)
@@ -396,7 +397,7 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
       }
    }
 
-   @Override
+
    public <T> CompletionStage<T> patch(Entity<?> entity, Class<T> responseType)
    {
       if (executor == null)
@@ -409,7 +410,7 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
       }
    }
 
-   @Override
+
    public <T> CompletionStage<T> patch(Entity<?> entity, GenericType<T> responseType)
    {
       if (executor == null)
@@ -421,4 +422,5 @@ public class CompletionStageRxInvokerImpl implements CompletionStageRxInvoker
          return CompletableFuture.supplyAsync(() -> invoker.patch(entity, responseType), executor);
       }
    }
+   */
 }
