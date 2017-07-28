@@ -1,6 +1,7 @@
 package org.jboss.resteasy.test.providers.sse;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -56,7 +57,6 @@ public class SseTest {
        Assert.assertEquals(SseEventSourceImpl.class, eventSource.getClass());
        eventSource.register(event -> {
             results.add(event.toString());
-            System.out.println("SseTest:testAddMessage:" + event.toString());
             latch.countDown();
           });
        eventSource.open();
@@ -67,7 +67,7 @@ public class SseTest {
        {
           messageTarget.request().post(Entity.text("message " + counter));
        } 
-       Assert.assertTrue("Waiting for event to be delivered has timed out.", latch.await(30, TimeUnit.SECONDS));
+       Assert.assertTrue("Waiting for event to be delivered has timed out and only get " + Arrays.toString(results.toArray()) , latch.await(30, TimeUnit.SECONDS));
        messageTarget.request().delete();
        messageClient.close();
        eventSource.close();
@@ -92,7 +92,7 @@ public class SseTest {
        });
        eventSource.open();
 
-       Assert.assertTrue("Waiting for event to be delivered has timed out.", latch.await(10, TimeUnit.SECONDS));
+       Assert.assertTrue("Waiting for event to be delivered has timed out and only get " + Arrays.toString(results.toArray()), latch.await(30, TimeUnit.SECONDS));
        Assert.assertTrue("6 SseInboundEvent expected", results.size() == 6);
        Assert.assertTrue("Expect the last event is Done event, but it is :" + results.toArray(new String[]
              {})[5], results.toArray(new String[]
