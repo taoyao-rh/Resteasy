@@ -66,6 +66,7 @@ public class SseTest {
        for (int counter = 0; counter < 5; counter++)
        {
           messageTarget.request().post(Entity.text("message " + counter));
+          Thread.sleep(1000);
        } 
        Assert.assertTrue("Waiting for event to be delivered has timed out and only get " + Arrays.toString(results.toArray()) , latch.await(30, TimeUnit.SECONDS));
        messageTarget.request().delete();
