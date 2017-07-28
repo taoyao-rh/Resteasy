@@ -56,6 +56,7 @@ public class SseTest {
        Assert.assertEquals(SseEventSourceImpl.class, eventSource.getClass());
        eventSource.register(event -> {
             results.add(event.toString());
+            System.out.println("SseTest:testAddMessage:" + event.toString());
             latch.countDown();
           });
        eventSource.open();
