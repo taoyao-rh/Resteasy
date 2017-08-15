@@ -446,6 +446,7 @@ public class JaxrsInterceptorRegistry<T>
       }
       logger.info("createArray, intf: " + intf.getClass().getSimpleName());
       logger.info("createArray: The size of the array is " + array.length);
+      logger.info("createArray: The size of the array with Array.getLength(array) is : " + Array.getLength(array));
       for (int i = 0; i < array.length; i++)
       {
          logger.info("createArray: looking for matches index " + i + ". The size of matches is : " + matches.size());
