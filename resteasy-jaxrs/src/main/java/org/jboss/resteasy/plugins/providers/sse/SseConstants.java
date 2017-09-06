@@ -16,6 +16,7 @@ public class SseConstants
    public static final byte[] RETRY_LEAD = "retry: ".getBytes(StandardCharsets.UTF_8);
    public static final byte[] DATA_LEAD = "data: ".getBytes(StandardCharsets.UTF_8);
    public static final byte[] EOL = "\n".getBytes(StandardCharsets.UTF_8);
+   public static final byte[] EVENT_DELIMITER = "\r\n\r\n".getBytes(StandardCharsets.UTF_8);
 
    public enum EVENT {
       START, COMMENT, FIELD,

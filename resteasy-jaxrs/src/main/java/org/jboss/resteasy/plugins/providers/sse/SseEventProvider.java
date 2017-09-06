@@ -105,13 +105,13 @@ public class SseEventProvider implements MessageBodyWriter<OutboundSseEvent>, Me
                throw new ServerErrorException(Messages.MESSAGES.notFoundMBW(payloadClass.getName()),
                      Response.Status.INTERNAL_SERVER_ERROR);
             }
-
             writer.writeTo(event.getData(), payloadClass, payloadType, annotations, event.getMediaType(), httpHeaders,
                   entityStream);
             entityStream.write(SseConstants.EOL);
          }
 
       }
+      entityStream.write(SseConstants.EOL);
    }
    
    

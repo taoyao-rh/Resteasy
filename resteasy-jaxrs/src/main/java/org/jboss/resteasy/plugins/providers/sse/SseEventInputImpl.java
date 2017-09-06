@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -22,7 +23,6 @@ public class SseEventInputImpl implements EventInput, Closeable
    private MediaType mediaType;
    private MultivaluedMap<String, String> httpHeaders;
    private InputStream inputStream;
-   private final byte[] EventEND = "\r\n\r\n".getBytes();
    private volatile boolean isClosed = false;
 
    public SseEventInputImpl(Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders,
@@ -72,13 +72,9 @@ public class SseEventInputImpl implements EventInput, Closeable
 
       final ByteArrayInputStream entityStream = new ByteArrayInputStream(chunk);
       final ByteArrayOutputStream temSave = new ByteArrayOutputStream();
-      Charset charset = SseConstants.UTF8;
-      if (mediaType != null && mediaType.getParameters().get(MediaType.CHARSET_PARAMETER) != null)
-      {
-         charset = Charset.forName(mediaType.getParameters().get(MediaType.CHARSET_PARAMETER));
-      }
       final InboundSseEventImpl.Builder eventBuilder = new InboundSseEventImpl.Builder(annotations, mediaType,
             httpHeaders);
+      //TODO: Look at if this can be improved
       int b = -1;
       SseConstants.EVENT currentState = SseConstants.EVENT.START;
       while ((b = entityStream.read()) != -1)
@@ -108,7 +104,7 @@ public class SseEventInputImpl implements EventInput, Closeable
             {
 
                b = readLine(entityStream, '\n', temSave);
-               String commentLine = temSave.toString(charset.toString());               
+               String commentLine = temSave.toString("UTF-8");
                eventBuilder.commentLine(commentLine);
                temSave.reset();
                currentState = SseConstants.EVENT.START;
@@ -118,11 +114,11 @@ public class SseEventInputImpl implements EventInput, Closeable
             {
                temSave.write(b);
                b = readLine(entityStream, ':', temSave);
-               String fieldName = temSave.toString(charset.toString());
+               String fieldName = temSave.toString("UTF-8");
                temSave.reset();
                if (b == ':')
                {
-                  //space after the colon is ignored
+                  //spec says there is space after colon
                   do
                   {
                      b = entityStream.read();
@@ -212,25 +208,39 @@ public class SseEventInputImpl implements EventInput, Closeable
       EventByteArrayOutputStream buffer = new EventByteArrayOutputStream();
       int data;
       int pos = 0;
+      boolean boundary = false;
+      byte[] eolBuffer = new byte[4];
       while ((data = in.read()) != -1)
       {
          byte b = (byte) data;
-         if (b == EventEND[pos])
+         if (b == '\r' || b == '\n')
          {
-            pos++;
+            eolBuffer[pos] = b;
+            //if it is crcr or lflf or crlfcrlf 
+            if ((pos > 1 && eolBuffer[pos] == eolBuffer[pos-1]) || (pos == 3 && Arrays.equals(eolBuffer, SseConstants.EVENT_DELIMITER)))
+            {
+               boundary = true;
+            }
+            //if there is 4 any 'r' or 'n' byte. we think it's boundary too
+            if (pos++ == 4) {
+               boundary = true;
+            }
+            
          }
          else
          {
             pos = 0;
          }
          buffer.write(b);
-         if (pos >= EventEND.length && buffer.toByteArray().length > EventEND.length)
+         if (boundary && buffer.size() > pos)
          {
             return buffer.getEventPayLoad();
          }
-         if (pos >= EventEND.length && buffer.toByteArray().length == EventEND.length)
+         //if it's emtpy 
+         if (boundary && buffer.size() == pos)
          {
             pos = 0;
+            boundary=false;
             buffer.reset();
             continue;
          }

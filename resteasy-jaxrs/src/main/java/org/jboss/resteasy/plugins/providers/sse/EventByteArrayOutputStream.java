@@ -6,17 +6,16 @@ import java.util.Arrays;
 public class EventByteArrayOutputStream extends ByteArrayOutputStream
 {
 
-   private void removeBlankLine()
+   public synchronized byte[] getEventPayLoad()
    {
-      if (this.count > 4)
+      if (this.buf[count - 1] == this.buf[count])
       {
-         count = count - 4;
+         count = count - 1;
       }
-   }
-
-   public synchronized byte getEventPayLoad()[]
-   {
-      removeBlankLine();
+      else
+      {
+         count = count - 2;
+      }
       return Arrays.copyOf(buf, count);
    }
 }
