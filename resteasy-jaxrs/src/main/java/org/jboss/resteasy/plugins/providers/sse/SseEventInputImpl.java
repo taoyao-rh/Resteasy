@@ -24,7 +24,7 @@ public class SseEventInputImpl implements EventInput, Closeable
    private MultivaluedMap<String, String> httpHeaders;
    private InputStream inputStream;
    private volatile boolean isClosed = false;
-   private final String DELIMIETER = new String(SseConstants.EVENT_DELIMITER, StandardCharsets.UTF_8);
+   private final String DELIMITER = new String(SseConstants.EVENT_DELIMITER, StandardCharsets.UTF_8);
    public SseEventInputImpl(Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders,
          InputStream inputStream)
    {
@@ -224,7 +224,7 @@ public class SseEventInputImpl implements EventInput, Closeable
             eolBuffer[pos] = b;
             //if it meets \r\r , \n\n , \r\n\r\n or \n\r\n\r\n
             if ((pos > 0 && eolBuffer[pos] == eolBuffer[pos - 1])
-                  || (pos >= 3 && new String(eolBuffer, 0, pos, StandardCharsets.UTF_8).contains(DELIMIETER)))
+                  || (pos >= 3 && new String(eolBuffer, 0, pos, StandardCharsets.UTF_8).contains(DELIMITER)))
             {
                boundary = true;
             }
