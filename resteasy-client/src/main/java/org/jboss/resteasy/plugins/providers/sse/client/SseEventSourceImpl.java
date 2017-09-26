@@ -111,7 +111,7 @@ public class SseEventSourceImpl implements SseEventSource
       if (target instanceof ResteasyWebTarget) {
          scheduledExecutor = ((ResteasyWebTarget)target).getResteasyClient().getScheduledExecutor();
       }
-      this.executor =  scheduledExecutor != null ? scheduledExecutor : Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
+      this.executor =  scheduledExecutor != null ? scheduledExecutor : Executors.newSingleThreadScheduledExecutor();
       if (open)
       {
          open();
@@ -269,8 +269,9 @@ public class SseEventSourceImpl implements SseEventSource
             if (state.get() == State.PENDING)
             {
                eventInput = request.get(SseEventInputImpl.class);
+               state.set(State.OPEN);
+              
             }
-            state.set(State.OPEN);
          } catch (Throwable e) {
             onErrorConsumers.forEach(consumer -> {consumer.accept(e);});
             state.set(State.CLOSED);
