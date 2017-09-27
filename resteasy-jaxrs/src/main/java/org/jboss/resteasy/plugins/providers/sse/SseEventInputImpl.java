@@ -52,10 +52,10 @@ public class SseEventInputImpl implements EventInput, Closeable
       try
       {
          chunk = readEvent(inputStream);
-         if (chunk == null) {
-            close();
+         if (chunk == null)
+         {
             return null;
-         } 
+         }
       }
       catch (IOException e1)
       {
