@@ -54,7 +54,7 @@ import java.util.List;
         "roles"
 })
 public class UserType {
-
+   @XmlElement(namespace = "http://creaity.de/homecontrol/rest/types/v1")
    protected String id;
    @XmlElement(required = true)
    protected UserType.Credentials credentials;
@@ -143,7 +143,7 @@ public class UserType {
    @XmlType(name = "", propOrder = {
            "loginId",
            "password"
-   })
+   },namespace = "http://creaity.de/homecontrol/rest/types/v1")
    public static class Credentials {
 
       @XmlElement(required = true)
