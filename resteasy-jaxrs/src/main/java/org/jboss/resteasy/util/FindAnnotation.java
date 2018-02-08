@@ -64,7 +64,7 @@ public final class FindAnnotation
                    JsonbAnnotation.class
            };
 
-   private FindAnnotation()
+   public FindAnnotation()
    {
    }
 
