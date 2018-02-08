@@ -132,7 +132,7 @@ public class Servlet3AsyncHttpRequest extends HttpServletInputMessage
          @Override
          public boolean setTimeout(long time, TimeUnit unit) throws IllegalStateException
          {
-            getAsyncContext().setTimeout(-1);
+            //getAsyncContext().setTimeout(-1);
             synchronized (responseLock)
             {
                if (done || cancelled)
@@ -154,7 +154,6 @@ public class Servlet3AsyncHttpRequest extends HttpServletInputMessage
                };
                LogMessages.LOGGER.debug(Messages.MESSAGES.schedulingTimeout());
                timeoutFuture = asyncScheduler.schedule(task, time, unit);
-
             }
             return true;
          }
