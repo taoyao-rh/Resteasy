@@ -19,7 +19,7 @@ import org.jboss.logging.Logger;
  * @author <a href="pslavice@jboss.com">Pavel Slavicek</a>
  * @version $Revision: 1.1 $
  */
-public class SimpleProxyServer implements ControllableProxy
+public class SimpleProxyServer
 {
    // Logger
    private static final Logger log = Logger.getLogger(SimpleProxyServer.class);
@@ -153,13 +153,11 @@ public class SimpleProxyServer implements ControllableProxy
       }
    }
 
-   @Override
    public void setTerminateRequest()
    {
       this.terminateRequest = true;
    }
 
-   @Override
    public boolean isTerminateRequest()
    {
       return this.terminateRequest;
@@ -184,7 +182,7 @@ public class SimpleProxyServer implements ControllableProxy
 
       private int remotePort;
 
-      private ControllableProxy controllableProxy;
+      private SimpleProxyServer controllableProxy;
 
       /**
        * Create a new ProxyThread.
@@ -193,7 +191,7 @@ public class SimpleProxyServer implements ControllableProxy
        * @param host
        * @param remotePort
        */
-      public ProxyThread(Socket socket, String host, int remotePort, ControllableProxy controllableProxy)
+      public ProxyThread(Socket socket, String host, int remotePort, SimpleProxyServer controllableProxy)
       {
          super("ProxyThread");
          this.clientSocket = socket;
