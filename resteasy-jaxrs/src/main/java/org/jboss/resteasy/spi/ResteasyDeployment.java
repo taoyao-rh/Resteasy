@@ -222,7 +222,10 @@ public class ResteasyDeployment
                throw new RuntimeException(Messages.MESSAGES.unableToInstantiateInjectorFactory(), e);
             }
          }
-         providerFactory.setInjectorFactory(injectorFactory);
+         if (injectorFactory != null)
+         {
+            providerFactory.setInjectorFactory(injectorFactory);
+         }
          // feed context data map with constructed objects
          // see ResteasyContextParameters.RESTEASY_CONTEXT_OBJECTS
          if (constructedDefaultContextObjects != null && constructedDefaultContextObjects.size() > 0)
