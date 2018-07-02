@@ -15,6 +15,7 @@ import org.jboss.resteasy.spi.metadata.ResourceConstructor;
 import org.jboss.resteasy.spi.metadata.ResourceLocator;
 
 import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.se.SeContainer;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.CDI;
@@ -42,6 +43,13 @@ public class CdiInjectorFactory implements InjectorFactory
    public CdiInjectorFactory()
    {
       this.manager = lookupBeanManager();
+      this.extension = lookupResteasyCdiExtension();
+      sessionBeanInterface = extension.getSessionBeanInterface();
+   }
+   
+   public CdiInjectorFactory(SeContainer seContainer)
+   {
+      this.manager = seContainer.getBeanManager();
       this.extension = lookupResteasyCdiExtension();
       sessionBeanInterface = extension.getSessionBeanInterface();
    }
