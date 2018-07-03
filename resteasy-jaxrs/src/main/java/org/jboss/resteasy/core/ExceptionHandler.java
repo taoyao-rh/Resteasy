@@ -9,10 +9,6 @@ import org.jboss.resteasy.spi.ReaderException;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.UnhandledException;
 import org.jboss.resteasy.spi.WriterException;
-import org.jboss.resteasy.tracing.RESTEasyServerTracingEvent;
-import org.jboss.resteasy.tracing.RESTEasyTracingEvent;
-import org.jboss.resteasy.tracing.RESTEasyTracingLogger;
-import org.jboss.resteasy.tracing.RESTEasyTracingLoggerImpl;
 import org.jboss.resteasy.util.HttpResponseCodes;
 
 import javax.ws.rs.NotFoundException;
@@ -49,59 +45,35 @@ public class ExceptionHandler
     * If there exists an Exception mapper for exception, execute it, otherwise, do NOT recurse up class hierarchy
     * of exception.
     *
-    * @param exception
-    * @param logger
+    * @param exception exception
     * @return response
     */
    @SuppressWarnings(value = "unchecked")
-   protected Response executeExactExceptionMapper(Throwable exception, RESTEasyTracingLogger logger) {
-       if (logger == null)
-           logger = RESTEasyTracingLoggerImpl.empty();
-
-       ExceptionMapper mapper = providerFactory.getExceptionMappers().get(exception.getClass());
-      if (mapper == null) return null;
-      mapperExecuted = true;
-      long timestamp = logger.timestamp(RESTEasyServerTracingEvent.EXCEPTION_MAPPING);
-      Response resp = mapper.toResponse(exception);
-      logger.logDuration(RESTEasyServerTracingEvent.EXCEPTION_MAPPING, timestamp, mapper, exception, exception.getLocalizedMessage(), resp);
-      return resp;
-   }
-
-   @Deprecated
-   @SuppressWarnings(value = "unchecked")
-   public Response executeExactExceptionMapper(Throwable exception) {
-      return executeExactExceptionMapper(exception, null);
-   }
-
-   @SuppressWarnings(value = "unchecked")
-   protected Response executeExceptionMapperForClass(Throwable exception, Class clazz, RESTEasyTracingLogger logger)
+   public Response executeExactExceptionMapper(Throwable exception)
    {
-      if (logger == null)
-          logger = RESTEasyTracingLoggerImpl.empty();
-      ExceptionMapper mapper = providerFactory.getExceptionMappers().get(clazz);
+      ExceptionMapper mapper = providerFactory.getExceptionMappers().get(exception.getClass());
       if (mapper == null) return null;
       mapperExecuted = true;
-      long timestamp = logger.timestamp(RESTEasyServerTracingEvent.EXCEPTION_MAPPING);
-      Response resp = mapper.toResponse(exception);
-      logger.logDuration(RESTEasyServerTracingEvent.EXCEPTION_MAPPING, timestamp, mapper, exception, exception.getLocalizedMessage(), resp);
-      return resp;
+      return mapper.toResponse(exception);
    }
 
-   @Deprecated
    @SuppressWarnings(value = "unchecked")
    public Response executeExceptionMapperForClass(Throwable exception, Class clazz)
    {
-      return executeExceptionMapperForClass(exception, clazz, null);
+      ExceptionMapper mapper = providerFactory.getExceptionMappers().get(clazz);
+      if (mapper == null) return null;
+      mapperExecuted = true;
+      return mapper.toResponse(exception);
    }
 
-   protected Response handleApplicationException(HttpRequest request, ApplicationException e, RESTEasyTracingLogger logger)
+   protected Response handleApplicationException(HttpRequest request, ApplicationException e)
    {
       Response jaxrsResponse = null;
       // See if there is a mapper for ApplicationException
-      if ((jaxrsResponse = executeExceptionMapperForClass(e, ApplicationException.class, logger)) != null) {
+      if ((jaxrsResponse = executeExceptionMapperForClass(e, ApplicationException.class)) != null) {
          return jaxrsResponse;
       }
-      jaxrsResponse = unwrapException(request, e, logger);
+      jaxrsResponse = unwrapException(request, e);
       if (jaxrsResponse == null) {
          throw new UnhandledException(e.getCause());
       }
@@ -115,12 +87,9 @@ public class ExceptionHandler
     * @return true if an ExceptionMapper was found and executed
     */
    @SuppressWarnings(value = "unchecked")
-   protected Response executeExceptionMapper(Throwable exception, RESTEasyTracingLogger logger)
+   public Response executeExceptionMapper(Throwable exception)
    {
-       if (logger == null)
-           logger = RESTEasyTracingLoggerImpl.empty();
-
-       ExceptionMapper mapper = null;
+      ExceptionMapper mapper = null;
 
       Class causeClass = exception.getClass();
       while (mapper == null) {
@@ -128,14 +97,9 @@ public class ExceptionHandler
          mapper = providerFactory.getExceptionMappers().get(causeClass);
          if (mapper == null) causeClass = causeClass.getSuperclass();
       }
-
       if (mapper != null) {
          mapperExecuted = true;
-
-         final long timestamp = logger.timestamp(RESTEasyServerTracingEvent.EXCEPTION_MAPPING);
          Response jaxrsResponse = mapper.toResponse(exception);
-         logger.logDuration(RESTEasyServerTracingEvent.EXCEPTION_MAPPING, timestamp, mapper, exception, exception.getLocalizedMessage(), jaxrsResponse);
-
          if (jaxrsResponse == null) {
             jaxrsResponse = Response.status(204).build();
          }
@@ -144,15 +108,8 @@ public class ExceptionHandler
       return null;
    }
 
-   @Deprecated
-   @SuppressWarnings(value = "unchecked")
-   public Response executeExceptionMapper(Throwable exception)
-   {
-     return executeExactExceptionMapper(exception, null);
-   }
 
-
-   protected Response unwrapException(HttpRequest request, Throwable e, RESTEasyTracingLogger logger)
+   protected Response unwrapException(HttpRequest request, Throwable e)
    {
       Response jaxrsResponse = null;
       Throwable unwrappedException = e.getCause();
@@ -171,9 +128,7 @@ public class ExceptionHandler
          if (wae.getResponse() != null && wae.getResponse().getEntity() != null) return wae.getResponse();
       }
 
-      jaxrsResponse = executeExceptionMapper(unwrappedException, logger);
-
-      if (jaxrsResponse != null) {
+      if ((jaxrsResponse = executeExceptionMapper(unwrappedException)) != null) {
          return jaxrsResponse;
       }
       if (unwrappedException instanceof WebApplicationException) {
@@ -184,7 +139,7 @@ public class ExceptionHandler
       }
       else {
          if (unwrappedExceptions.contains(unwrappedException.getClass().getName()) && unwrappedException.getCause() != null) {
-            return unwrapException(request, unwrappedException, logger);
+            return unwrapException(request, unwrappedException);
          }
          else {
             return null;
@@ -192,54 +147,51 @@ public class ExceptionHandler
       }
    }
 
-   protected Response handleFailure(HttpRequest request, Failure failure) {
+   protected Response handleFailure(HttpRequest request, Failure failure)
+   {
       if (failure.isLoggable())
          LogMessages.LOGGER.failedExecutingError(request.getHttpMethod(), request.getUri().getPath(), failure);
-      else
-         LogMessages.LOGGER.failedExecutingDebug(request.getHttpMethod(), request.getUri().getPath(), failure);
+      else LogMessages.LOGGER.failedExecutingDebug(request.getHttpMethod(), request.getUri().getPath(), failure);
 
-      Response response = failure.getResponse();
-
-      if (response != null) {
-         return response;
-      } else {
+      if (failure.getResponse() != null) {
+         return failure.getResponse();
+      }
+      else {
          Response.ResponseBuilder builder = Response.status(failure.getErrorCode());
-         if (failure.getMessage() != null)
-            builder.type(MediaType.TEXT_HTML).entity(failure.getMessage());
-         Response resp = builder.build();
-         return resp;
+         if (failure.getMessage() != null) builder.type(MediaType.TEXT_HTML).entity(failure.getMessage());
+         return builder.build();
       }
    }
 
-   protected Response handleWriterException(HttpRequest request, WriterException e, RESTEasyTracingLogger logger)
+   protected Response handleWriterException(HttpRequest request, WriterException e)
    {
       Response jaxrsResponse = null;
       // See if there is a general mapper for WriterException
-      if ((jaxrsResponse = executeExceptionMapperForClass(e, WriterException.class, logger)) != null) {
+      if ((jaxrsResponse = executeExceptionMapperForClass(e, WriterException.class)) != null) {
          return jaxrsResponse;
       }
       if (e.getResponse() != null || e.getErrorCode() > -1) {
          return handleFailure(request, e);
       }
       else if (e.getCause() != null) {
-         if ((jaxrsResponse = unwrapException(request, e, logger)) != null) return jaxrsResponse;
+         if ((jaxrsResponse = unwrapException(request, e)) != null) return jaxrsResponse;
       }
       e.setErrorCode(HttpResponseCodes.SC_INTERNAL_SERVER_ERROR);
       return handleFailure(request, e);
    }
 
-   protected Response handleReaderException(HttpRequest request, ReaderException e, RESTEasyTracingLogger logger)
+   protected Response handleReaderException(HttpRequest request, ReaderException e)
    {
       Response jaxrsResponse = null;
       // See if there is a general mapper for ReaderException
-      if ((jaxrsResponse = executeExceptionMapperForClass(e, ReaderException.class, logger)) != null) {
+      if ((jaxrsResponse = executeExceptionMapperForClass(e, ReaderException.class)) != null) {
          return jaxrsResponse;
       }
       if (e.getResponse() != null || e.getErrorCode() > -1) {
          return handleFailure(request, e);
       }
       else if (e.getCause() != null) {
-         if ((jaxrsResponse = unwrapException(request, e, logger)) != null) return jaxrsResponse;
+         if ((jaxrsResponse = unwrapException(request, e)) != null) return jaxrsResponse;
       }
       e.setErrorCode(HttpResponseCodes.SC_BAD_REQUEST);
       return handleFailure(request, e);
@@ -255,25 +207,25 @@ public class ExceptionHandler
       {
          LogMessages.LOGGER.failedToExecute(wae);
       }
-      Response response = wae.getResponse();
-      return response;
+      return wae.getResponse();
    }
 
 
-   public Response handleException(HttpRequest request, Throwable e) {
+   public Response handleException(HttpRequest request, Throwable e)
+   {
       Response jaxrsResponse = null;
-      RESTEasyTracingLogger logger = RESTEasyTracingLogger.getInstance(request);
-
       // See if there is an ExceptionMapper for the exact class of the exception instance being thrown
-      if ((jaxrsResponse = executeExactExceptionMapper(e, logger)) != null) return jaxrsResponse;
+      if ((jaxrsResponse = executeExactExceptionMapper(e)) != null) return jaxrsResponse;
 
       // These are wrapper exceptions so they need to be processed first as they map e.getCause()
       if (e instanceof ApplicationException) {
-         return handleApplicationException(request, (ApplicationException) e, logger);
-      } else if (e instanceof WriterException) {
-         return handleWriterException(request, (WriterException) e, logger);
-      } else if (e instanceof ReaderException) {
-         return handleReaderException(request, (ReaderException) e, logger);
+         return handleApplicationException(request, (ApplicationException) e);
+      }
+      else if (e instanceof WriterException) {
+         return handleWriterException(request, (WriterException) e);
+      }
+      else if (e instanceof ReaderException) {
+         return handleReaderException(request, (ReaderException) e);
       }
 
       /*
@@ -286,28 +238,23 @@ public class ExceptionHandler
        */
       if (e instanceof WebApplicationException) {
          WebApplicationException wae = (WebApplicationException) e;
-         if (wae.getResponse() != null && wae.getResponse().getEntity() != null) {
-            Response response =  wae.getResponse();
-            return response;
-         }
+         if (wae.getResponse() != null && wae.getResponse().getEntity() != null) return wae.getResponse();
       }
 
       // First try and handle it with a mapper
-      {
-         jaxrsResponse = executeExceptionMapper(e, logger);
-         if (jaxrsResponse != null) {
-            return jaxrsResponse;
-         }
+      if ((jaxrsResponse = executeExceptionMapper(e)) != null) {
+         return jaxrsResponse;
       }
-
       // Otherwise do specific things
-      if (e instanceof WebApplicationException) {
+      else if (e instanceof WebApplicationException) {
          return handleWebApplicationException((WebApplicationException) e);
-      } else if (e instanceof Failure) {
+      }
+      else if (e instanceof Failure) {
          return handleFailure(request, (Failure) e);
       }
-
-      LogMessages.LOGGER.unknownException(request.getHttpMethod(), request.getUri().getPath(), e);
-      throw new UnhandledException(e);
+      else {
+         LogMessages.LOGGER.unknownException(request.getHttpMethod(), request.getUri().getPath(), e);
+         throw new UnhandledException(e);
+      }
    }
 }

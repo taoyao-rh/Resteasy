@@ -246,7 +246,6 @@ public class ResteasyClient implements Client
       WebTarget target = target(link);
       if (link.getType() != null) return target.request(link.getType());
       else return target.request();
-
    }
 
 }
