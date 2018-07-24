@@ -3,6 +3,8 @@ package org.jboss.resteasy.core.interception.jaxrs;
 import org.jboss.resteasy.core.NoMessageBodyWriterFoundFailure;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.*;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.spi.tracing.ResteasyTracePoint;
+import org.jboss.resteasy.spi.tracing.ResteasyTracePointUtil;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -115,13 +117,26 @@ public abstract class AbstractWriterInterceptorContext implements WriterIntercep
    public void proceed() throws IOException, WebApplicationException
    {
       LogMessages.LOGGER.debugf("Interceptor Context: %s,  Method : proceed", getClass().getName());
-
+      ResteasyTracePoint interceptorsSpan = null;
+      if (interceptors != null && index == 0)
+      {
+         interceptorsSpan = ResteasyTracePointUtil.createChildPoint("WRITE_INTERCEPTORS").start();
+      }
       if (interceptors == null || index >= interceptors.length)
       {
+         if (interceptorsSpan != null)
+         {
+            interceptorsSpan.finish();
+         }
+         ResteasyTracePoint resolveWriterSpan = ResteasyTracePointUtil.createChildPoint("RESOLVE_WRITER").start();
          MessageBodyWriter writer = getWriter();
+         resolveWriterSpan.finish();
          if (writer!=null)
              LogMessages.LOGGER.debugf("MessageBodyWriter: %s", writer.getClass().getName());
+         ResteasyTracePoint writerSpan = ResteasyTracePointUtil.createChildPoint("WRITER_INVOCATION").start();
          writeTo(writer);
+         writerSpan.finish();
+         
       }
       else
       {

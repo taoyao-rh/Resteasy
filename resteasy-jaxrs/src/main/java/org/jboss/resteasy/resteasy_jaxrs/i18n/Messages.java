@@ -632,6 +632,13 @@ public interface Messages
    @Message(id = BASE + 885, value = "Unable to find InjectorFactory implementation.")
    String unableToFindInjectorFactory();
    
+   @Message(id = BASE + 886, value = "Unable to find TracerFactory implementation.")
+   String unableToFindTracerFactory();
+   
+   @Message(id = BASE + 887, value = "Unable to instantiate TracerrFactory implementation.")
+   String unableToInstantiateTracerFactory();
+   
+   
    @Message(id = BASE + 890, value = "Unable to find JAX-RS resource associated with path: %s.")
    String unableToFindJaxRsResource(String path);
 
@@ -783,4 +790,6 @@ public interface Messages
 
    @Message(id = BASE + 1094, value = "Unable to instantiate ContextInjector")
    String unableToInstantiateContextInjector();
+   
+
 }

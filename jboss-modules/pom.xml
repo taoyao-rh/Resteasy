@@ -99,6 +99,26 @@
           <artifactId>jackson-module-jaxb-annotations</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.opentracing</groupId>
+            <artifactId>opentracing-api</artifactId>
+        </dependency>
+        <dependency>
+             <groupId>io.opentracing</groupId>
+             <artifactId>opentracing-util</artifactId>
+        </dependency>
+        <dependency>
+             <groupId>io.opentracing</groupId>
+             <artifactId>opentracing-noop</artifactId>
+        </dependency>
+        <dependency>
+             <groupId>io.jaegertracing</groupId>
+             <artifactId>jaeger-core</artifactId>
+        </dependency>   
+        <dependency>
+             <groupId>io.jaegertracing</groupId>
+             <artifactId>jaeger-thrift</artifactId>
+        </dependency> 
+        <dependency>
             <groupId>io.reactivex</groupId>
             <artifactId>rxjava</artifactId>
         </dependency>
@@ -213,6 +233,13 @@
             <artifactId>resteasy-multipart-provider</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-opentracing</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
 
         <dependency>
             <groupId>org.jboss.resteasy</groupId>

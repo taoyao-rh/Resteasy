@@ -30,6 +30,8 @@ import org.jboss.resteasy.spi.ApplicationException;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.HttpResponse;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.spi.tracing.ResteasyTracePoint;
+import org.jboss.resteasy.spi.tracing.ResteasyTracePointUtil;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -341,6 +343,7 @@ public class ContainerResponseContextImpl implements SuspendableContainerRespons
 
    public synchronized void filter() throws IOException
    {
+      ResteasyTracePoint span = ResteasyTracePointUtil.createChildPoint("RESP-FILTER").start();
       while(currentFilter < responseFilters.length)
       {
          ContainerResponseFilter filter = responseFilters[currentFilter++];
@@ -381,6 +384,7 @@ public class ContainerResponseContextImpl implements SuspendableContainerRespons
             }
          }
       }
+      span.finish();
       // here it means we reached the last filter
 
       // some frameworks don't support async request filters, in which case suspend() is forbidden

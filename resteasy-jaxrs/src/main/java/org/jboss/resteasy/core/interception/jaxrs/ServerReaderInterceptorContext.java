@@ -1,8 +1,11 @@
 package org.jboss.resteasy.core.interception.jaxrs;
 
+import org.jboss.resteasy.resteasy_jaxrs.i18n.LogMessages;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.spi.tracing.ResteasyTracePoint;
+import org.jboss.resteasy.spi.tracing.ResteasyTracePointUtil;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotSupportedException;
@@ -36,17 +39,17 @@ public class ServerReaderInterceptorContext extends AbstractReaderInterceptorCon
       super(mediaType, providerFactory, annotations, interceptors, headers, genericType, type, inputStream);
       this.request = request;
    }
-
    @Override
    protected MessageBodyReader resolveReader(MediaType mediaType)
    {
+      ResteasyTracePoint span= ResteasyTracePointUtil.createChildPoint("RESOLVE_MBR").start();
       @SuppressWarnings(value = "unchecked")
       MessageBodyReader reader =  providerFactory.getServerMessageBodyReader(type,
               genericType, annotations, mediaType);
       //logger.info("**** picked reader: " + reader.getClass().getName());
+      span.finish();
       return reader;
    }
-
    @Override
    protected void throwReaderNotFound()
    {
@@ -58,7 +61,10 @@ public class ServerReaderInterceptorContext extends AbstractReaderInterceptorCon
    {
       try
       {
-         return super.readFrom(reader);
+         ResteasyTracePoint span= ResteasyTracePointUtil.createChildPoint("MBR_READ").start();
+         Object result = super.readFrom(reader);
+         span.finish();
+         return result;
       }
       catch (NoContentException e)
       {

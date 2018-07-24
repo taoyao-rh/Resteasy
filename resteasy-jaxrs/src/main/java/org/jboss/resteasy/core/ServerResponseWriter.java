@@ -14,6 +14,9 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.CommitHeaderOutputStream;
 import org.jboss.resteasy.util.HttpHeaderNames;
 import org.jboss.resteasy.util.MediaTypeHelper;
+import org.jboss.resteasy.spi.tracing.ResteasyTracePoint;
+
+import org.jboss.resteasy.spi.tracing.ResteasyTracePointUtil;
 
 import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.Produces;
@@ -25,6 +28,7 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.WriterInterceptor;
+
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -82,6 +86,7 @@ public class ServerResponseWriter
       
       executeFilters(jaxrsResponse, request, response, providerFactory, method, onComplete, () -> {
          //[RESTEASY-1627] check on response.getOutputStream() to avoid resteasy-netty4 trying building a chunked response body for HEAD requests 
+         ResteasyTracePoint span = ResteasyTracePointUtil.createChildPoint("PRE_WIRTE_INTERCEPTORS").start();
          if (jaxrsResponse.getEntity() == null || response.getOutputStream() == null)
          {
             response.setStatus(jaxrsResponse.getStatus());
@@ -131,10 +136,10 @@ public class ServerResponseWriter
          {
             writerInterceptors = providerFactory.getServerWriterInterceptorRegistry().postMatch(null, null);
          }
-
          AbstractWriterInterceptorContext writerContext =  new ServerWriterInterceptorContext(writerInterceptors,
                providerFactory, ent, type, generic, annotations, mt,
                jaxrsResponse.getMetadata(), os, request);
+         span.finish();
          writerContext.proceed();
          if(sendHeaders) {
             response.setOutputStream(writerContext.getOutputStream()); //propagate interceptor changes on the outputstream to the response
@@ -187,7 +192,7 @@ public class ServerResponseWriter
 		   ResourceMethodInvoker method, Consumer<Throwable> onComplete, RunnableWithIOException continuation) throws IOException
    {
       ContainerResponseFilter[] responseFilters = null;
-
+      ResteasyTracePoint span = ResteasyTracePointUtil.createChildPoint("GET_RES_FILTER").start();
       if (method != null)
       {
          responseFilters = method.getResponseFilters();
@@ -196,7 +201,7 @@ public class ServerResponseWriter
       {
          responseFilters = providerFactory.getContainerResponseFilterRegistry().postMatch(null, null);
       }
-
+      span.finish();
       if (responseFilters != null)
       {
          ResponseContainerRequestContext requestContext = new ResponseContainerRequestContext(request);

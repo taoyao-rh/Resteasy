@@ -37,7 +37,7 @@ public interface LogMessages extends BasicLogger
    //                                                  ERROR                                                //
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////   
 
-   @LogMessage(level = Level.ERROR)
+   @LogMessage(level = Level.INFO)
    @Message(id = BASE + 0, value = "Error resuming failed async operation", format=Format.MESSAGE_FORMAT)
    void errorResumingFailedAsynchOperation(@Cause Throwable cause);
    

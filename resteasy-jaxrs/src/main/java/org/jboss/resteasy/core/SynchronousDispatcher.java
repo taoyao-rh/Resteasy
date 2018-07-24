@@ -39,6 +39,12 @@ import org.jboss.resteasy.spi.ResteasyAsynchronousContext;
 import org.jboss.resteasy.spi.ResteasyConfiguration;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.UnhandledException;
+import org.jboss.resteasy.spi.tracing.ResponseHeaderTracerReporter;
+import org.jboss.resteasy.spi.tracing.ResteasyTracePoint;
+import org.jboss.resteasy.spi.tracing.ResteasyTracePointUtil;
+import org.jboss.resteasy.spi.tracing.ResteasyTracerImpl;
+import org.jboss.resteasy.spi.tracing.ResteasyTracer;
+import org.jboss.resteasy.spi.tracing.TracerFactory;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -54,7 +60,6 @@ public class SynchronousDispatcher implements Dispatcher
    protected Set<String> unwrappedExceptions = new HashSet<String>();
    protected boolean bufferExceptionEntityRead = false;
    protected boolean bufferExceptionEntity = true;
-   
    public SynchronousDispatcher(ResteasyProviderFactory providerFactory)
    {
       this.providerFactory = providerFactory;
@@ -97,14 +102,17 @@ public class SynchronousDispatcher implements Dispatcher
       Response aborted = null;
       try
       {
+        
          for (HttpRequestPreprocessor preprocessor : this.requestPreprocessors)
          {
             preprocessor.preProcess(request);
          }
+        
          ContainerRequestFilter[] requestFilters = providerFactory.getContainerRequestFilterRegistry().preMatch();
          // FIXME: support async
          PreMatchContainerRequestContext requestContext = new PreMatchContainerRequestContext(request, requestFilters, null);
          aborted = requestContext.filter();
+
       }
       catch (Exception e)
       {
@@ -125,8 +133,10 @@ public class SynchronousDispatcher implements Dispatcher
    {
       Response aborted = null;
       PreMatchContainerRequestContext requestContext = null;
+      
       try
       {
+         
          for (HttpRequestPreprocessor preprocessor : this.requestPreprocessors)
          {
             preprocessor.preProcess(request);
@@ -137,6 +147,7 @@ public class SynchronousDispatcher implements Dispatcher
                   continuation.run();
                   return null;
                });
+
          aborted = requestContext.filter();
       }
       catch (Exception e)
@@ -214,13 +225,17 @@ public class SynchronousDispatcher implements Dispatcher
       try
       {
          pushContextObjects(request, response);
+         ResteasyTracePoint parentSpan = ResteasyTracePointUtil.createPoint("Server-" + request.getUri().getPath()).start();
+         parentSpan.start();
          preprocess(request, response, () -> {
             ResourceInvoker invoker = null;
             try
             {
                try
                {
+                  ResteasyTracePoint match = ResteasyTracePointUtil.createPoint(parentSpan, "MATCH").start();
                   invoker = getInvoker(request);
+                  match.finish();
                }
                catch (Exception exception)
                {
@@ -233,6 +248,8 @@ public class SynchronousDispatcher implements Dispatcher
             finally
             {
                // we're probably clearing it twice but still required
+               parentSpan.finish();
+               ResteasyTracePointUtil.report(parentSpan);
                clearContextData();
             }
          });
@@ -316,6 +333,7 @@ public class SynchronousDispatcher implements Dispatcher
       contextDataMap.put(UriInfo.class, request.getUri());
       contextDataMap.put(Request.class, new RequestImpl(request, response));
       contextDataMap.put(ResteasyAsynchronousContext.class, request.getAsyncContext());
+      contextDataMap.put(ResteasyTracer.class, this.providerFactory.getTracerFactory().createTracer(request, response));
       ResourceContext resourceContext = new ResourceContext()
       {
          @Override
@@ -441,6 +459,7 @@ public class SynchronousDispatcher implements Dispatcher
     */
    public void invoke(HttpRequest request, HttpResponse response, ResourceInvoker invoker)
    {
+    
       Response jaxrsResponse = null;
       try
       {
@@ -469,7 +488,6 @@ public class SynchronousDispatcher implements Dispatcher
          writeException(request, response, e, t->{});
          return;
       }
-
       if (jaxrsResponse != null) writeResponse(request, response, jaxrsResponse);
    }
 
@@ -556,5 +574,6 @@ public class SynchronousDispatcher implements Dispatcher
    {
       requestPreprocessors.add(httpPreprocessor);
    }
+
 
 }

@@ -135,4 +135,7 @@ public interface Messages
    
    @Message(id = BASE + 175, value = "This verification path not implemented")
    String verificationPathNotImplemented();
+   
+   @Message(id = BASE + 180, value = "Unable to load tracer factory : %s")
+   String unableToLoadTracerFactory(String factoryName);
 }

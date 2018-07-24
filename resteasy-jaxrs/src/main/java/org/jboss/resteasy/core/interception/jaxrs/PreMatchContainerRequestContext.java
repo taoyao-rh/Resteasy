@@ -28,6 +28,8 @@ import org.jboss.resteasy.spi.ApplicationException;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.HttpResponse;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.spi.tracing.ResteasyTracePoint;
+import org.jboss.resteasy.spi.tracing.ResteasyTracePointUtil;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -297,6 +299,8 @@ public class PreMatchContainerRequestContext implements SuspendableContainerRequ
 
    public synchronized BuiltResponse filter()
    {
+      boolean isPreMatch = PreMatchContainerRequestContext.class == (this.getClass());
+      ResteasyTracePoint filterSpan = ResteasyTracePointUtil.createChildPoint(isPreMatch ? "PRE-MATCH" : "POST_MATCH").start();
       while(currentFilter < requestFilters.length)
       {
          ContainerRequestFilter filter = requestFilters[currentFilter++];
@@ -348,6 +352,7 @@ public class PreMatchContainerRequestContext implements SuspendableContainerRequ
             }
          }
       }
+      filterSpan.finish();
       // here it means we reached the last filter
       // some frameworks don't support async request filters, in which case suspend() is forbidden
       // so if we get here we're still synchronous and don't have a continuation, which must be in

@@ -7,7 +7,9 @@ import org.jboss.resteasy.client.jaxrs.i18n.Messages;
 import org.jboss.resteasy.client.jaxrs.internal.ClientConfiguration;
 import org.jboss.resteasy.client.jaxrs.internal.LocalResteasyProviderFactory;
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
+import org.jboss.resteasy.plugins.server.servlet.ResteasyContextParameters;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.spi.tracing.TracerFactory;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SNIHostName;
@@ -17,6 +19,7 @@ import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSocket;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Configuration;
+
 import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -397,7 +400,23 @@ public class ResteasyClientBuilder extends ClientBuilder
       {
          config.property(entry.getKey(), entry.getValue());
       }
-
+      if (null != getProviderFactory().getProperty("resteasy.tracer.factory")) {
+         String tracerFactoryClass = (String)getProviderFactory().getProperty("resteasy.tracer.factory");
+         if (!tracerFactoryClass.isEmpty())
+         {
+            try
+            {
+               Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(tracerFactoryClass);
+               TracerFactory tracerFactory = (TracerFactory) clazz.newInstance();
+               providerFactory.setTracerFactory(tracerFactory);
+            }
+            catch (Exception cnfe)
+            {
+               throw new RuntimeException(Messages.MESSAGES.unableToLoadTracerFactory(tracerFactoryClass)); 
+            }
+         }
+      }
+      
       ExecutorService executor = asyncExecutor;
 
       if (executor == null)

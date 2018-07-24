@@ -2,6 +2,8 @@ package org.jboss.resteasy.core.interception.jaxrs;
 
 import org.jboss.resteasy.resteasy_jaxrs.i18n.*;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.spi.tracing.ResteasyTracePoint;
+import org.jboss.resteasy.spi.tracing.ResteasyTracePointUtil;
 
 import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.core.HttpHeaders;
@@ -48,12 +50,29 @@ public abstract class AbstractReaderInterceptorContext implements ReaderIntercep
    public Object proceed() throws IOException
    {
       LogMessages.LOGGER.debugf("Interceptor Context: %s,  Method : proceed", getClass().getName());
+      ResteasyTracePoint interceptorsSpan = null;
+      if (interceptors != null && index == 0)
+      {
+         interceptorsSpan = ResteasyTracePointUtil.createChildPoint("READER_INTERCEPTORS").start();
+      }
       if (interceptors == null || index >= interceptors.length)
       {
+         if (interceptorsSpan != null)
+         {
+            interceptorsSpan.finish();
+         }
+         ResteasyTracePoint resolveReaderSpan = ResteasyTracePointUtil.createChildPoint("RESOLVE_READER").start();
          MessageBodyReader reader = getReader();
+         resolveReaderSpan.finish();
+         
          if (reader!=null)
              LogMessages.LOGGER.debugf("MessageBodyReader: %s", reader.getClass().getName());
-         return readFrom(reader);
+         
+         ResteasyTracePoint readerSpan = ResteasyTracePointUtil.createChildPoint("READER_INVOCATION").start();
+         Object obj = readFrom(reader);
+         readerSpan.finish();
+         
+         return obj;
       }
       LogMessages.LOGGER.debugf("ReaderInterceptor: %s", interceptors[index].getClass().getName());
       return interceptors[index++].aroundReadFrom(this);
@@ -74,6 +93,7 @@ public abstract class AbstractReaderInterceptorContext implements ReaderIntercep
       {
          mediaType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
       }
+      
       MessageBodyReader reader = resolveReader(mediaType);
       if (reader == null)
       {

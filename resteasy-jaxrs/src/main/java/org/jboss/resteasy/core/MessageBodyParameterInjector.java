@@ -27,6 +27,8 @@ import org.jboss.resteasy.spi.HttpResponse;
 import org.jboss.resteasy.spi.MarshalledEntity;
 import org.jboss.resteasy.spi.ReaderException;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.spi.tracing.ResteasyTracePoint;
+import org.jboss.resteasy.spi.tracing.ResteasyTracePointUtil;
 import org.jboss.resteasy.util.InputStreamToByteArray;
 import org.jboss.resteasy.util.ThreadLocalStack;
 import org.jboss.resteasy.util.Types;
@@ -199,6 +201,7 @@ public class MessageBodyParameterInjector implements ValueInjector, JaxrsInterce
          AbstractReaderInterceptorContext messageBodyReaderContext = new ServerReaderInterceptorContext(interceptors, factory, type,
                  genericType, annotations, mediaType, request
                  .getHttpHeaders().getRequestHeaders(), is, request);
+         //TODO: look at provide resolve reader and MBR span
          final Object obj = messageBodyReaderContext.proceed();
          if (isMarshalledEntity)
          {

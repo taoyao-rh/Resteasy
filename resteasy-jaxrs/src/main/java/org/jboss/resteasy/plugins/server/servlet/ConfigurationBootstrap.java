@@ -252,6 +252,17 @@ abstract public class ConfigurationBootstrap implements ResteasyConfiguration
          deployment.setInjectorFactoryClass(injectorFactoryClass);
       }
 
+      String tracerFactoryClass = getParameter("resteasy.tracer.factory");
+      if (tracerFactoryClass != null)
+      {
+         deployment.setTracerFactoryClass(tracerFactoryClass);
+      }
+      String tracing = getParameter(ResteasyContextParameters.RESTEASY_TRACING);
+      if (tracing != null)
+      {
+         boolean enabled = parseBooleanParam(ResteasyContextParameters.RESTEASY_TRACING, tracing);
+         deployment.enableTracer(enabled);
+      }
       if (applicationConfig != null) deployment.setApplicationClass(applicationConfig);
       deployment.getDefaultContextObjects().put(ResteasyConfiguration.class, this);
       return deployment;

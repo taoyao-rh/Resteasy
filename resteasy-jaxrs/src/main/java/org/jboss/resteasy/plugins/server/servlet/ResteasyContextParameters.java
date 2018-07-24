@@ -47,4 +47,5 @@ public interface ResteasyContextParameters
     String RESTEASY_GZIP_MAX_INPUT = "resteasy.gzip.max.input";
     String RESTEASY_SECURE_RANDOM_MAX_USE = "resteasy.secure.random.max.use";
     String RESTEASY_ADD_CHARSET = "resteasy.add.charset";
+    String RESTEASY_TRACING = "resteasy.tracing";
 }

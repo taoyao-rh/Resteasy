@@ -28,6 +28,8 @@ import org.jboss.resteasy.specimpl.ResteasyUriBuilder;
 import org.jboss.resteasy.specimpl.VariantListBuilderImpl;
 import org.jboss.resteasy.spi.metadata.ResourceBuilder;
 import org.jboss.resteasy.spi.metadata.ResourceClassProcessor;
+import org.jboss.resteasy.spi.tracing.TracerFactory;
+import org.jboss.resteasy.spi.tracing.TracerFactoryImpl;
 import org.jboss.resteasy.util.FeatureContextDelegate;
 import org.jboss.resteasy.util.PickConstructor;
 import org.jboss.resteasy.util.ThreadLocalStack;
@@ -47,7 +49,6 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.core.*;
-import javax.ws.rs.core.Link;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -258,8 +259,8 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
    protected Map<Class<?>, Class<? extends RxInvokerProvider<?>>> reactiveClasses;
 
    protected ResourceBuilder resourceBuilder;
-
-
+   protected TracerFactory tracingFactory;
+   protected boolean tracerEnabled;
    public ResteasyProviderFactory()
    {
       // NOTE!!! It is important to put all initialization into initialize() as ThreadLocalResteasyProviderFactory
@@ -349,6 +350,7 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
       registerBuiltins = true;
 
       injectorFactory = new InjectorFactoryImpl();
+      this.tracingFactory = new TracerFactoryImpl();
       addHeaderDelegate(MediaType.class, new MediaTypeHeaderDelegate());
       addHeaderDelegate(NewCookie.class, new NewCookieHeaderDelegate());
       addHeaderDelegate(Cookie.class, new CookieHeaderDelegate());
@@ -809,6 +811,19 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
    {
       this.injectorFactory = injectorFactory;
    }
+   
+   public TracerFactory getTracerFactory()
+   {
+      if (tracingFactory == null && parent != null) return parent.getTracerFactory();
+      return tracingFactory;
+   }
+
+   public void setTracerFactory(TracerFactory tracingFactory)
+   {
+      this.tracingFactory = tracingFactory;
+   }
+
+   
 
    public ReaderInterceptorRegistry getServerReaderInterceptorRegistry()
    {
@@ -3011,5 +3026,15 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
 
    public ResourceBuilder getResourceBuilder() {
       return resourceBuilder;
+   }
+   
+   public boolean isTracerEnabled()
+   {
+      return this.tracerEnabled;
+   }
+   
+   public void enableTracer(boolean traceEnabled)
+   {
+      this.tracerEnabled = traceEnabled;
    }
 }

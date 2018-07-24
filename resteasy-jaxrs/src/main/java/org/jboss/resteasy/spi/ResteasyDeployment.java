@@ -13,6 +13,7 @@ import org.jboss.resteasy.plugins.providers.ServerFormUrlEncodedProvider;
 import org.jboss.resteasy.plugins.server.resourcefactory.JndiComponentResourceFactory;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.LogMessages;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
+import org.jboss.resteasy.spi.tracing.TracerFactory;
 import org.jboss.resteasy.util.GetRestful;
 
 import javax.ws.rs.core.Application;
@@ -47,6 +48,7 @@ public class ResteasyDeployment
    protected String asyncJobServiceBasePath = "/asynch/jobs";
    protected String applicationClass;
    protected String injectorFactoryClass;
+   protected String tracerFactoryClass;
    protected InjectorFactory injectorFactory;
    protected Application application;
    protected boolean registerBuiltin = true;
@@ -76,6 +78,7 @@ public class ResteasyDeployment
    protected ResteasyProviderFactory providerFactory;
    protected ThreadLocalResteasyProviderFactory threadLocalProviderFactory;
    protected String paramMapping;
+   protected boolean traceEnabled = false;
 
    public void start()
    {
@@ -308,6 +311,28 @@ public class ResteasyDeployment
                providerFactory.getContainerRequestFilterRegistry().registerSingleton(suffixNegotiationFilter);
             }
             suffixNegotiationFilter.setLanguageMappings(languageExtensions);
+         }
+
+         if (tracerFactoryClass != null)
+         {
+            try
+            {
+               Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(tracerFactoryClass);
+               TracerFactory tracerFactory = (TracerFactory) clazz.newInstance();
+               providerFactory.setTracerFactory(tracerFactory);
+            }
+            catch (ClassNotFoundException cnfe)
+            {
+               throw new RuntimeException(Messages.MESSAGES.unableToFindTracerFactory(), cnfe);
+            }
+            catch (Exception e)
+            {
+               throw new RuntimeException(Messages.MESSAGES.unableToInstantiateInjectorFactory(), e);
+            }
+         }
+         if (this.traceEnabled)
+         {
+            providerFactory.enableTracer(traceEnabled);
          }
       }
       finally
@@ -1011,4 +1036,20 @@ public class ResteasyDeployment
    {
       this.injectorFactory = injectorFactory;
    }
+
+   public void setTracerFactoryClass(String tracerFactoryClass)
+   {
+      this.tracerFactoryClass = tracerFactoryClass;
+   }
+
+   public boolean isTracerEnabled()
+   {
+      return this.traceEnabled;
+   }
+   
+   public void enableTracer(boolean traceEnabled)
+   {
+      this.traceEnabled = traceEnabled;
+   }
+   
 }

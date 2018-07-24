@@ -35,6 +35,7 @@ public class HttpServletDispatcher extends HttpServlet implements HttpRequestFac
       ServletBootstrap bootstrap = new ServletBootstrap(servletConfig);
       servletContainerDispatcher.init(servletConfig.getServletContext(), bootstrap, this, this);
       servletContainerDispatcher.getDispatcher().getDefaultContextObjects().put(ServletConfig.class, servletConfig);
+      
 
    }
 

@@ -21,6 +21,8 @@ import org.jboss.resteasy.spi.UnhandledException;
 import org.jboss.resteasy.spi.metadata.MethodParameter;
 import org.jboss.resteasy.spi.metadata.Parameter;
 import org.jboss.resteasy.spi.metadata.ResourceMethod;
+import org.jboss.resteasy.spi.tracing.ResteasyTracePoint;
+import org.jboss.resteasy.spi.tracing.ResteasyTracePointUtil;
 import org.jboss.resteasy.spi.validation.GeneralValidator;
 import org.jboss.resteasy.spi.validation.GeneralValidatorCDI;
 import org.jboss.resteasy.util.FeatureContextDelegate;
@@ -78,7 +80,7 @@ public class ResourceMethodInvoker implements ResourceInvoker, JaxrsInterceptorR
    protected ResourceInfo resourceInfo;
 
    protected boolean expectsBody;
-
+   private ResteasyTracePoint invokerSpan;
 
 
    public ResourceMethodInvoker(ResourceMethod method, InjectorFactory injector, ResourceFactory resource, ResteasyProviderFactory providerFactory)
@@ -310,8 +312,9 @@ public class ResourceMethodInvoker implements ResourceInvoker, JaxrsInterceptorR
 
    public CompletionStage<BuiltResponse> invoke(HttpRequest request, HttpResponse response)
    {
+      ResteasyTracePoint createRes = ResteasyTracePointUtil.createChildPoint("CREATE_RESOURCE").start();
       return resource.createResource(request, response, resourceMethodProviderFactory)
-            .thenCompose(target -> invoke(request, response, target));
+            .thenCompose(target -> {createRes.finish(); return invoke(request, response, target);});
    }
 
    public CompletionStage<Object> invokeDryRun(HttpRequest request, HttpResponse response, Object target)
@@ -371,6 +374,7 @@ public class ResourceMethodInvoker implements ResourceInvoker, JaxrsInterceptorR
 
    protected BuiltResponse invokeOnTargetAfterFilter(HttpRequest request, HttpResponse response, Object target)
    {
+      invokerSpan = ResteasyTracePointUtil.createChildPoint("INVOKE").start();
       if (validator != null)
       {
          if (isValidatable)
@@ -486,6 +490,10 @@ public class ResourceMethodInvoker implements ResourceInvoker, JaxrsInterceptorR
          }
       }
       jaxrsResponse.addMethodAnnotations(getMethodAnnotations());
+      if (invokerSpan != null)
+      {
+         this.invokerSpan.finish();
+      }
       return jaxrsResponse;
    }
 

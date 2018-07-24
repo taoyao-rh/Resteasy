@@ -87,6 +87,8 @@
         <version.io.reactivex.rxjava-reactive-streams>1.2.1</version.io.reactivex.rxjava-reactive-streams>
         <version.io.reactivex.rxjava2-rxjava>2.1.5</version.io.reactivex.rxjava2-rxjava>
         <version.org.reactivestreams>1.0.2</version.org.reactivestreams>
+        <version.opentracing>0.31.0</version.opentracing>
+        <version.jaeger>0.30.0</version.jaeger>
     </properties>
 
     <distributionManagement>
@@ -534,6 +536,37 @@
                 <artifactId>microprofile-config-api</artifactId>
                 <version>${version.microprofile.config}</version>
             </dependency>
+            <!--opentracing related-->
+            <dependency>
+                <groupId>io.opentracing</groupId>
+                <artifactId>opentracing-api</artifactId>
+                <version>${version.opentracing}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.opentracing</groupId>
+                <artifactId>opentracing-util</artifactId>
+                <version>${version.opentracing}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.opentracing</groupId>
+                <artifactId>opentracing-noop</artifactId>
+                <version>${version.opentracing}</version>
+            </dependency>
+
+           <dependency>
+               <groupId>io.jaegertracing</groupId>
+               <artifactId>jaeger-core</artifactId>
+               <version>${version.jaeger}</version>
+           </dependency> 
+           
+           <dependency>
+               <groupId>io.jaegertracing</groupId>
+               <artifactId>jaeger-thrift</artifactId>
+               <version>${version.jaeger}</version>
+           </dependency> 
+
 
             <!-- testsuite dependencies -->
             <dependency>
