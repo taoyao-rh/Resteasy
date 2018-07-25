@@ -17,7 +17,7 @@ import java.util.Map;
 * @see     Closeable
 * @since   4.0
 * */
-public interface ResteasyTracePoint extends Map, Closeable 
+public interface ResteasyTracePoint extends Closeable 
 {
    
    /**
@@ -57,4 +57,20 @@ public interface ResteasyTracePoint extends Map, Closeable
     * @return context string 
     */
    String  getContextString();
+   
+   
+   /**
+    * Add more info to TracePoint with key-value pair 
+    * 
+    * @param key info key
+    * @param value info
+    */
+   void addDetail(String key, String value);
+   
+   /**
+    * Get all added info  info 
+    * 
+    * @return all added info
+    */
+   Map<String, String> getDetails();
 }

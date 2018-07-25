@@ -1,5 +1,7 @@
 package org.jboss.resteasy.spi.tracing;
 
+import java.util.Arrays;
+
 public class ResteasyLoggerTracerReporter implements ResteasyTracerReporter
 {
 
@@ -27,21 +29,28 @@ public class ResteasyLoggerTracerReporter implements ResteasyTracerReporter
             ratio = spanDuration * 100 / parentDuration;
          }
          logger.info("RESTEASY-TRACE-" + Integer.toHexString(counter++)
-               + getResultString(span.getName(), String.valueOf(spanDuration), String.valueOf(ratio)));
+               + getResultString(String.valueOf(ratio), parent));
       }
       logger.info("RESTEASY-TRACE" + Integer.toHexString(counter++) + getResultString("FINISED", null, null));
    }
 
-   protected String getResultString(String name, String duration, String ratio)
+   protected String getResultString(String ratio, ResteasyTracePoint point)
+   {
+
+      return getResultString( String.valueOf(point.getDuration()), ratio, point);
+   }
+   
+   protected String getResultString(String duration, String ratio,  ResteasyTracePoint point)
    {
 
       if (duration == null)
          duration = "------";
       if (ratio == null)
          ratio = "------";
-      StringBuffer result = new StringBuffer(String.format("%-30s", name).replace(" ", "-"));
-      result.append(String.format("[ %6s ms | %6s %%]", duration, ratio));
+      StringBuffer result = new StringBuffer(String.format("%-30s", point.getName()).replace(" ", "-"));
+      result.append(String.format("[ %6s ms | %6s %%]:%s",  duration, ratio, Arrays.asList(point)));
       return result.toString();
    }
+   
 
 }

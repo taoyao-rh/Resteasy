@@ -2,7 +2,6 @@ package org.jboss.resteasy.spi.tracing;
 
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.HttpResponse;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 /*
 * Factory object to create a ResteasyTracer with the configuraiton from 
 * http request or response. 

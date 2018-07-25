@@ -1,15 +1,12 @@
 package org.jboss.resteasy.spi.tracing;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class ResteasyNoopTracePointImpl implements ResteasyTracePoint
 {
-
    public ResteasyNoopTracePointImpl(ResteasyTracePoint parent, String operationName)
    {
    }
@@ -17,76 +14,6 @@ public class ResteasyNoopTracePointImpl implements ResteasyTracePoint
    public ResteasyNoopTracePointImpl(String operationName)
    {
 
-   }
-   @Override
-   public int size()
-   {
-      return 0;
-   }
-
-   @Override
-   public boolean isEmpty()
-   {
-      return false;
-   }
-
-   @Override
-   public boolean containsKey(Object key)
-   {
-      return false;
-   }
-
-   @Override
-   public boolean containsValue(Object value)
-   {
-      return false;
-   }
-
-   @Override
-   public Object get(Object key)
-   {
-      return null;
-   }
-
-   @Override
-   public Object put(Object key, Object value)
-   {
-      return null;
-   }
-
-   @Override
-   public Object remove(Object key)
-   {
-      return null;
-   }
-
-   @Override
-   public void putAll(Map m)
-   {
-      
-   }
-
-   @Override
-   public void clear()
-   {
-   }
-
-   @Override
-   public Set keySet()
-   {
-      return null;
-   }
-
-   @Override
-   public Collection values()
-   {
-      return null;
-   }
-
-   @Override
-   public Set entrySet()
-   {
-      return null;
    }
 
    @Override
@@ -118,6 +45,7 @@ public class ResteasyNoopTracePointImpl implements ResteasyTracePoint
       return this;
    }
 
+   @SuppressWarnings("unchecked")
    @Override
    public List<ResteasyTracePoint> getChildren()
    {
@@ -128,6 +56,19 @@ public class ResteasyNoopTracePointImpl implements ResteasyTracePoint
    public String getContextString()
    {
       return "";
+   }
+
+   @Override
+   public void addDetail(String key, String value)
+   {
+      
+   }
+
+   @SuppressWarnings("unchecked")
+   @Override
+   public Map<String, String> getDetails()
+   {
+      return Collections.EMPTY_MAP;
    }
 
 }

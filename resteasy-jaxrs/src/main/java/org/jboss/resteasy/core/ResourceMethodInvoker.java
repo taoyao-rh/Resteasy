@@ -492,7 +492,7 @@ public class ResourceMethodInvoker implements ResourceInvoker, JaxrsInterceptorR
       jaxrsResponse.addMethodAnnotations(getMethodAnnotations());
       if (invokerSpan != null)
       {
-         this.invokerSpan.finish();
+         invokerSpan.finish().addDetail("Method", method.toString());
       }
       return jaxrsResponse;
    }

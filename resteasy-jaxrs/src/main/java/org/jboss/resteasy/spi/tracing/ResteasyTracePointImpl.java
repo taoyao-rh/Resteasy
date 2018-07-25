@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
-public class ResteasyTracePointImpl extends HashMap implements ResteasyTracePoint
+public class ResteasyTracePointImpl implements ResteasyTracePoint
 {
    protected long start;
 
@@ -18,6 +19,8 @@ public class ResteasyTracePointImpl extends HashMap implements ResteasyTracePoin
    protected String operationName;
 
    protected List<ResteasyTracePoint> childs = new LinkedList<ResteasyTracePoint>();
+   
+   protected Map<String, String> infos = new HashMap<String, String>();
 
    public ResteasyTracePointImpl(ResteasyTracePoint parent, String operationName)
    {
@@ -87,5 +90,17 @@ public class ResteasyTracePointImpl extends HashMap implements ResteasyTracePoin
    public String getContextString()
    {
       return  this.operationName;
+   }
+
+   @Override
+   public void addDetail(String key, String value)
+   {
+      this.infos.put(key, value);
+   }
+
+   @Override
+   public Map<String, String> getDetails()
+   {
+      return infos;
    }
 }
