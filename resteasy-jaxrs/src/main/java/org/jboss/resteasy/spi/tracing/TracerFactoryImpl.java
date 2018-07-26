@@ -54,8 +54,6 @@ public class TracerFactoryImpl implements TracerFactory
    public ResteasyTracer createTracer()
    {
       ResteasyTracerImpl tracer = new ResteasyTracerImpl();
-
-      tracer.addReporter(loggerReporter);
       return tracer;
    }
 

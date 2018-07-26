@@ -31,4 +31,10 @@ public class ResteasyNoopTracerImpl implements ResteasyTracer
    {
       return CONTEXT_KEY;
    }
+   @Override
+   public void addReporter(ResteasyTracerReporter reporter)
+   {
+       //do nothing
+      
+   }
 }

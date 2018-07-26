@@ -47,6 +47,7 @@ import org.jboss.resteasy.client.jaxrs.AsyncClientHttpEngine;
 import org.jboss.resteasy.client.jaxrs.ClientHttpEngine;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.internal.proxy.ClientInvoker;
+import org.jboss.resteasy.client.jaxrs.tracing.ClientTracerLoggingReporter;
 import org.jboss.resteasy.core.interception.jaxrs.AbstractWriterInterceptorContext;
 import org.jboss.resteasy.core.interception.jaxrs.ClientWriterInterceptorContext;
 import org.jboss.resteasy.plugins.providers.sse.EventInput;
@@ -56,7 +57,6 @@ import org.jboss.resteasy.spi.tracing.ResteasyNoopTracerImpl;
 import org.jboss.resteasy.spi.tracing.ResteasyTracePoint;
 import org.jboss.resteasy.spi.tracing.ResteasyTracePointUtil;
 import org.jboss.resteasy.spi.tracing.ResteasyTracer;
-import org.jboss.resteasy.spi.tracing.TracerFactory;
 import org.jboss.resteasy.util.DelegatingOutputStream;
 import org.jboss.resteasy.util.Types;
 
@@ -469,6 +469,7 @@ public class ClientInvocation implements Invocation
             }
             ResteasyProviderFactory.pushContext(ResteasyTracer.class, tracer);
          }
+         
          ResteasyTracePoint parent = ResteasyTracePointUtil.createPoint("Client").start();
          
          ResteasyTracePoint clientRequestFilterSpan = ResteasyTracePointUtil.createChildPoint("REQUEST_FILTER").start();
@@ -482,14 +483,17 @@ public class ClientInvocation implements Invocation
          }
 
          // spec requires that aborted response go through filter/interceptor chains.
-         ResteasyTracePoint invokeServerPoint = ResteasyTracePointUtil.createChildPoint("INVOKE_SERVER").start();
-         this.getHeaders().header(tracer.getContextKey(), invokeServerPoint.getContextString());
+         ResteasyTracePoint serverPoint = ResteasyTracePointUtil.createChildPoint("INVOKE_SERVER").start();
+         this.getHeaders().header(tracer.getContextKey(), serverPoint.getContextString());
          ClientResponse response = (aborted != null) ? aborted : client.httpEngine().invoke(this);
-         invokeServerPoint.finish();
+         serverPoint.finish();
+         tracer.addReporter(new ClientTracerLoggingReporter(response));
          ResteasyTracePoint filterResSpan = ResteasyTracePointUtil.createChildPoint("FILTER_RESPONSE").start();
          ClientResponse filteredRes = filterResponse(requestContext, response);
          filterResSpan.finish();
          parent.finish();
+         //TODO: add this to finally
+         tracer.report(parent);
          return filteredRes;
       }
       catch (ResponseProcessingException e)

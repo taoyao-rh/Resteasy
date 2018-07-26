@@ -8,10 +8,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.resteasy.spi.tracing.ResteasyTracePoint;
 
-public class ResteayOpenSpan extends HashMap implements ResteasyTracePoint
+public class ResteayOpenSpan implements ResteasyTracePoint
 {
    private SpanBuilder spanBuilder;
 
@@ -84,5 +85,22 @@ public class ResteayOpenSpan extends HashMap implements ResteasyTracePoint
    public String getContextString()
    {
        return span.context().contextAsString();
+   }
+
+   @Override
+   public void addDetail(String key, String value)
+   {
+       this.span.setTag(key, value);
+      
+   }
+
+   @Override
+   public Map<String, String> getDetails()
+   {   
+      Map<String, String> result = new HashMap<String, String>(span.getTags().size());
+      span.getTags().forEach((k, v) -> {
+         result.put(k, v.toString());
+      });
+      return result;
    }
 }

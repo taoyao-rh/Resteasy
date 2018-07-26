@@ -1,5 +1,6 @@
 package org.jboss.resteasy.tracing.opentracing;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,12 +17,14 @@ import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.HttpResponse;
 import org.jboss.resteasy.spi.tracing.ResteasyTracePoint;
 import org.jboss.resteasy.spi.tracing.ResteasyTracer;
+import org.jboss.resteasy.spi.tracing.ResteasyTracerReporter;
 
 public class ResteasyOpenTracer implements ResteasyTracer
 {
 
    private Tracer tracer;
-
+   private final  List<ResteasyTracerReporter> reporters = new ArrayList<ResteasyTracerReporter>(4);
+   
    public ResteasyOpenTracer(Tracer tracer)
    {
       this.tracer = tracer;
@@ -68,6 +71,22 @@ public class ResteasyOpenTracer implements ResteasyTracer
    {
       
       return "uber-trace-id";
+   }
+   
+   @Override
+   public void report(ResteasyTracePoint point)
+   {
+      reporters.forEach(reporter -> {
+         reporter.report(point);
+      });
+      
+   }
+
+   @Override
+   public void addReporter(ResteasyTracerReporter reporter)
+   {
+      reporters.add(reporter);
+      
    }
 
 }

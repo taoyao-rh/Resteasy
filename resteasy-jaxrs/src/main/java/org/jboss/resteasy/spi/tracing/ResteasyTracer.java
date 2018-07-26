@@ -1,8 +1,5 @@
 package org.jboss.resteasy.spi.tracing;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.HttpResponse;
 /*
@@ -18,11 +15,7 @@ import org.jboss.resteasy.spi.HttpResponse;
 
 public interface ResteasyTracer
 {
-  
-   /**
-    * List contains the added ResteasyTracerReporter
-    */
-   List<ResteasyTracerReporter> reporters = new ArrayList<ResteasyTracerReporter>(4);
+
    /**
     * Create Trace point with parent
     * 
@@ -58,22 +51,13 @@ public interface ResteasyTracer
     * 
     * @param point trace point
     */
-   default void report(ResteasyTracePoint point)
-   {
-      for (ResteasyTracerReporter reporter : reporters)
-      {
-         reporter.report(point);
-      }
-   }
+   void report(ResteasyTracePoint point);
 
    /**
     * Add reporters 
     * 
     * @param reporter reporter to add to list
     */
-   default void addReporter(ResteasyTracerReporter reporter)
-   {
-      reporters.add(reporter);
-   }
+   void addReporter(ResteasyTracerReporter reporter);
    
 }

@@ -22,7 +22,7 @@ public class ResponseHeaderTracerReporter extends ResteasyLoggerTracerReporter
      
       long parentDuration = parent.getDuration();
       this.response.getOutputHeaders().putSingle("X-RESTEASY-TRACE-" + Integer.toHexString(counter++),
-            getResultString("START", null, null));
+            getFormatString("START", null, null));
       for (ResteasyTracePoint span : parent.getChildren())
       {
          long spanDuration = span.getDuration();
@@ -32,9 +32,9 @@ public class ResponseHeaderTracerReporter extends ResteasyLoggerTracerReporter
             ratio = spanDuration * 100 / parentDuration;
          }
          this.response.getOutputHeaders().putSingle("X-RESTEASY-TRACE-" + Integer.toHexString(counter++),
-               getResultString(String.valueOf(ratio), parent));
+               getResultString(String.valueOf(ratio), span));
       }
       this.response.getOutputHeaders().putSingle("X-RESTEASY-TRACE-" + Integer.toHexString(counter++),
-            getResultString("FINISED", null, null));
+            getFormatString("FINISED", null, null));
    }
 }

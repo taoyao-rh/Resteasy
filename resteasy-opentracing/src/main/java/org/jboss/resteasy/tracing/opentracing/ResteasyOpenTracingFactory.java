@@ -65,7 +65,6 @@ public class ResteasyOpenTracingFactory implements TracerFactory
    public ResteasyTracer createTracer()
    {
       ResteasyOpenTracer openTracer = new ResteasyOpenTracer(GlobalTracer.get());
-      openTracer.addReporter(loggerReporter);
       return openTracer;
    }
 }
