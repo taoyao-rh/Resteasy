@@ -367,7 +367,13 @@
             <version>${version.resteasy.testsuite}</version>
             <scope>provided</scope>
         </dependency>
-                
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-opentracing</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>

@@ -48,7 +48,7 @@ public class ClientTracerLoggingReporter extends ResteasyLoggerTracerReporter
             }
          }
       }
-      logger.info("RESTEASY-TRACE" + Integer.toHexString(counter++) + ":"+  getFormatString("FINISED", null, null));
+      logger.info("RESTEASY-TRACE" + Integer.toHexString(counter++) + ":"+  getFormatString("FINISHED", null, null));
 
    }
 
