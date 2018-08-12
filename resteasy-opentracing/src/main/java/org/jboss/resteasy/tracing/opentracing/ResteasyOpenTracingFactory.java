@@ -17,6 +17,7 @@ public class ResteasyOpenTracingFactory implements TracerFactory
 {
    public ResteasyOpenTracingFactory()
    {
+      System.out.println("ResteasyOpenTracingFactory is working!!!!!!!!!!!!!!!!!!!!!!!!!");
       if (!GlobalTracer.isRegistered())
       {
          Builder builder = new Builder("Resteasy")

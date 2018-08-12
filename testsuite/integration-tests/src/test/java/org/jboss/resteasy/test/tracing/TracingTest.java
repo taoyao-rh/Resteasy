@@ -4,6 +4,7 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.plugins.server.servlet.ResteasyContextParameters;
 import org.jboss.resteasy.test.tracing.resource.TracingResource;
 import org.jboss.resteasy.tracing.opentracing.ResteasyOpenTracingFactory;
 import org.jboss.resteasy.util.HttpResponseCodes;
@@ -31,12 +32,14 @@ public class TracingTest {
     @Deployment
     public static Archive<?> createTestArchive() {
         WebArchive war = TestUtil.prepareArchive(TracingTest.class.getSimpleName());
-        war.addClasses(TracingTest.class);
+        war.addClass(org.jboss.resteasy.tracing.opentracing.ResteasyOpenTracingFactory.class);
         war.setManifest(new StringAsset("Manifest-Version: 1.0\n"
                 + "Dependencies: io.opentracing, org.jboss.resteasy.resteasy-opentracing\n"));
         Map<String, String> contextParams = new HashMap<>();
         contextParams.put("resteasy.tracer.factory", "org.jboss.resteasy.tracing.opentracing.ResteasyOpenTracingFactory");
-        return TestUtil.finishContainerPrepare(war, contextParams, TracingResource.class, ResteasyOpenTracingFactory.class);
+        contextParams.put(ResteasyContextParameters.RESTEASY_TRACING, "true");
+        //return TestUtil.finishContainerPrepare(war, contextParams, TracingResource.class, ResteasyOpenTracingFactory.class);
+        return TestUtil.finishContainerPrepare(war, contextParams, TracingResource.class);
     }
 
     /**
@@ -50,15 +53,6 @@ public class TracingTest {
         builder.property("resteasy.tracing", true);
         Client client = builder.build();
 
-        /*WebTarget base = client.target(PortProviderUtil.generateURL("/test/absolute", TracingTest.class.getSimpleName()));
-        Response response = base.request().header("x-resteasy-trace", "true").get();
-
-        Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-        System.out.println("status : " + response.getStatus());
-
-        for (Map.Entry<String, List<Object>> entry : response.getHeaders().entrySet()) {
-            System.out.println(entry.getKey() + ":" + entry.getValue().toString());
-        }*/
         WebTarget base = client.target(PortProviderUtil.generateURL("/test/absolute", TracingTest.class.getSimpleName()));
         for (int i = 0; i < 5; i++) {
             Response response = base.request().header("x-resteasy-trace", "true").get();
