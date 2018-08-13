@@ -4,6 +4,7 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.plugins.server.servlet.ResteasyContextParameters;
 import org.jboss.resteasy.test.tracing.resource.TracingResource;
 import org.jboss.resteasy.tracing.opentracing.ResteasyOpenTracingFactory;
 import org.jboss.resteasy.util.HttpResponseCodes;
@@ -31,7 +32,7 @@ public class TracingTest {
     @Deployment
     public static Archive<?> createTestArchive() {
         WebArchive war = TestUtil.prepareArchive(TracingTest.class.getSimpleName());
-        war.addClasses(TracingTest.class);
+        war.addClass(org.jboss.resteasy.tracing.opentracing.ResteasyOpenTracingFactory.class);
         war.setManifest(new StringAsset("Manifest-Version: 1.0\n"
                 + "Dependencies: io.opentracing, org.jboss.resteasy.resteasy-opentracing\n"));
         Map<String, String> contextParams = new HashMap<>();
