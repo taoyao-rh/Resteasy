@@ -78,6 +78,9 @@
             <maven-resource group="io.opentracing"  artifact="opentracing-noop"/>
             <maven-resource group="io.jaegertracing"  artifact="jaeger-core"/>
             <maven-resource group="io.jaegertracing"  artifact="jaeger-thrift"/>
+            <maven-resource group="io.jaegertracing"  artifact="jaeger-client"/>
+            <maven-resource group="io.jaegertracing"  artifact="jaeger-tracerresolver"/>
+            <maven-resource group="org.slf4j"  artifact="slf4j-simple"/>
         </module-def>
 
         <module-def name="org.eclipse.microprofile.restclient">

@@ -36,6 +36,7 @@ public class TracingTest {
                 + "Dependencies: io.opentracing, org.jboss.resteasy.resteasy-opentracing\n"));
         Map<String, String> contextParams = new HashMap<>();
         contextParams.put("resteasy.tracer.factory", "org.jboss.resteasy.tracing.opentracing.ResteasyOpenTracingFactory");
+        contextParams.put("resteasy.tracing", "true");
         return TestUtil.finishContainerPrepare(war, contextParams, TracingResource.class, ResteasyOpenTracingFactory.class);
     }
 
@@ -50,15 +51,6 @@ public class TracingTest {
         builder.property("resteasy.tracing", true);
         Client client = builder.build();
 
-        /*WebTarget base = client.target(PortProviderUtil.generateURL("/test/absolute", TracingTest.class.getSimpleName()));
-        Response response = base.request().header("x-resteasy-trace", "true").get();
-
-        Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-        System.out.println("status : " + response.getStatus());
-
-        for (Map.Entry<String, List<Object>> entry : response.getHeaders().entrySet()) {
-            System.out.println(entry.getKey() + ":" + entry.getValue().toString());
-        }*/
         WebTarget base = client.target(PortProviderUtil.generateURL("/test/absolute", TracingTest.class.getSimpleName()));
         for (int i = 0; i < 5; i++) {
             Response response = base.request().header("x-resteasy-trace", "true").get();

@@ -34,6 +34,6 @@
         <module name="javax.ws.rs.api"/>
         <module name="org.jboss.resteasy.resteasy-jaxrs"/>
         <module name="org.jboss.logging"/>
-        <module name="io.opentracing"/>
+        <module name="io.opentracing" services="import"/>
     </dependencies>
 </module>

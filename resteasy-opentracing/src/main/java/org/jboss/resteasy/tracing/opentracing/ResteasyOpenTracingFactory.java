@@ -17,6 +17,7 @@ public class ResteasyOpenTracingFactory implements TracerFactory
 {
    public ResteasyOpenTracingFactory()
    {
+      System.out.println("ResteasyOpenTracingFactory!");
       if (!GlobalTracer.isRegistered())
       {
          Builder builder = new Builder("Resteasy")
@@ -32,6 +33,7 @@ public class ResteasyOpenTracingFactory implements TracerFactory
    @Override
    public ResteasyTracer createTracer(HttpRequest request, HttpResponse response)
    {
+      System.out.println("ResteasyOpenTracingFactory.createTracer(HttpRequest request, HttpResponse response)");
       
       ResteasyOpenTracer openTracer;
       if (ResteasyProviderFactory.getInstance().isTracerEnabled())
@@ -64,6 +66,7 @@ public class ResteasyOpenTracingFactory implements TracerFactory
    @Override
    public ResteasyTracer createTracer()
    {
+      System.out.println("ResteasyOpenTracingFactory.createTracer()");
       ResteasyOpenTracer openTracer = new ResteasyOpenTracer(GlobalTracer.get());
       return openTracer;
    }

@@ -13,6 +13,7 @@ public class TracerFactoryImpl implements TracerFactory
    @Override
    public ResteasyTracer createTracer(HttpRequest request, HttpResponse response)
    {
+      System.out.println("TracerFactoryImpl.createTracer(HttpRequest request, HttpResponse response)");
       ResteasyTracerImpl tracer = null;
       if (ResteasyProviderFactory.getInstance().isTracerEnabled())
       {
@@ -53,6 +54,7 @@ public class TracerFactoryImpl implements TracerFactory
    @Override
    public ResteasyTracer createTracer()
    {
+      System.out.println("TracerFactoryImpl.createTracer()");
       ResteasyTracerImpl tracer = new ResteasyTracerImpl();
       return tracer;
    }

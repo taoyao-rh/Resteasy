@@ -117,7 +117,19 @@
         <dependency>
              <groupId>io.jaegertracing</groupId>
              <artifactId>jaeger-thrift</artifactId>
-        </dependency> 
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/io.jaegertracing/jaeger-client -->
+        <dependency>
+            <groupId>io.jaegertracing</groupId>
+            <artifactId>jaeger-client</artifactId>
+            <version>0.30.3</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/io.jaegertracing/jaeger-tracerresolver -->
+        <dependency>
+            <groupId>io.jaegertracing</groupId>
+            <artifactId>jaeger-tracerresolver</artifactId>
+            <version>0.30.0</version>
+        </dependency>
         <dependency>
             <groupId>io.reactivex</groupId>
             <artifactId>rxjava</artifactId>
@@ -291,6 +303,10 @@
             <artifactId>yasson</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
