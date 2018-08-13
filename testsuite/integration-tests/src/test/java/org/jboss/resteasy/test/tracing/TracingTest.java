@@ -34,7 +34,7 @@ public class TracingTest {
         WebArchive war = TestUtil.prepareArchive(TracingTest.class.getSimpleName());
         war.addClass(org.jboss.resteasy.tracing.opentracing.ResteasyOpenTracingFactory.class);
         war.setManifest(new StringAsset("Manifest-Version: 1.0\n"
-                + "Dependencies: io.opentracing, org.jboss.resteasy.resteasy-opentracing\n"));
+                + "Dependencies: io.opentracing services, org.jboss.resteasy.resteasy-opentracing\n"));
         Map<String, String> contextParams = new HashMap<>();
         contextParams.put("resteasy.tracer.factory", "org.jboss.resteasy.tracing.opentracing.ResteasyOpenTracingFactory");
         contextParams.put("resteasy.tracing", "true");
