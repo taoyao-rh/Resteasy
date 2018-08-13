@@ -1,30 +1,26 @@
 package org.jboss.resteasy.test.tracing;
 
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.container.test.api.RunAsClient;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-import org.jboss.resteasy.plugins.server.servlet.ResteasyContextParameters;
-import org.jboss.resteasy.test.tracing.resource.TracingResource;
-import org.jboss.resteasy.tracing.opentracing.ResteasyOpenTracingFactory;
-import org.jboss.resteasy.util.HttpResponseCodes;
-import org.jboss.resteasy.utils.PortProviderUtil;
-import org.jboss.resteasy.utils.TestUtil;
-import org.jboss.shrinkwrap.api.Archive;
-import org.jboss.shrinkwrap.api.asset.StringAsset;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import static org.jboss.resteasy.test.TestPortProvider.generateURL;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.container.test.api.RunAsClient;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.resteasy.test.tracing.resource.TracingResource;
+import org.jboss.resteasy.tracing.opentracing.ResteasyOpenTracingFactory;
+import org.jboss.resteasy.utils.PortProviderUtil;
+import org.jboss.resteasy.utils.TestUtil;
+import org.jboss.shrinkwrap.api.Archive;
+import org.jboss.shrinkwrap.api.asset.StringAsset;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(Arquillian.class)
 @RunAsClient
@@ -34,7 +30,7 @@ public class TracingTest {
         WebArchive war = TestUtil.prepareArchive(TracingTest.class.getSimpleName());
         war.addClass(org.jboss.resteasy.tracing.opentracing.ResteasyOpenTracingFactory.class);
         war.setManifest(new StringAsset("Manifest-Version: 1.0\n"
-                + "Dependencies: io.opentracing services, org.jboss.resteasy.resteasy-opentracing\n"));
+                + "Dependencies: org.jboss.resteasy.resteasy-opentracing services\n"));
         Map<String, String> contextParams = new HashMap<>();
         contextParams.put("resteasy.tracer.factory", "org.jboss.resteasy.tracing.opentracing.ResteasyOpenTracingFactory");
         contextParams.put("resteasy.tracing", "true");

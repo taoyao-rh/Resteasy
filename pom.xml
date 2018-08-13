@@ -255,7 +255,7 @@
                     <configuration>
                         <forkMode>once</forkMode>
                         <runOrder>reversealphabetical</runOrder>
-                        <argLine>${surefire.system.args} -Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005</argLine>
+                        <argLine>${surefire.system.args}</argLine>
                     </configuration>
                 </plugin>
                 <plugin>
