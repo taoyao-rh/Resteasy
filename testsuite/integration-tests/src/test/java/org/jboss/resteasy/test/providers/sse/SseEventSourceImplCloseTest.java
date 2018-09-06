@@ -112,7 +112,7 @@ public class SseEventSourceImplCloseTest {
                 msgEventSourceFollowing.close();
             }
 
-            boolean waitResult = latch.await(30, TimeUnit.SECONDS);
+            boolean waitResult = latch.await(120, TimeUnit.SECONDS);
             Assert.assertTrue("Waiting for event to be delivered has timed out.", waitResult);
             Assert.assertEquals("One message was expected.", 1, results.size());
             Assert.assertThat("The message doesn't have expected content.", "data",
