@@ -94,20 +94,14 @@ public class SseEventSourceImplCloseTest {
             try (SseEventSource eventSource = msgEventSource) {
                 eventSource.register(event -> {
                     results.add(event);
-                    try {
-                        Thread.currentThread().sleep(10 * 1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
                     latch.countDown();
                 });
                 eventSource.open();
-
             }
 
             // Using the same scheduledExecutor
             // Closing this EventSource does not affect the previous tasks.
-            WebTarget targetFollowing = client.target(generateURL("/sse/events"));
+            WebTarget targetFollowing = client.target(generateURL("/sse/eventssimple"));
             SseEventSource msgEventSourceFollowing = SseEventSource.target(target).build();
             try (SseEventSource eventSource = msgEventSourceFollowing) {
                 eventSource.register(event -> {
@@ -120,38 +114,6 @@ public class SseEventSourceImplCloseTest {
 
             boolean waitResult = latch.await(30, TimeUnit.SECONDS);
             Assert.assertTrue("Waiting for event to be delivered has timed out.", waitResult);
-            Assert.assertEquals("One message was expected.", 1, results.size());
-            Assert.assertThat("The message doesn't have expected content.", "data",
-                    CoreMatchers.is(CoreMatchers.equalTo(results.get(0).readData(String.class))));
-        } finally {
-            client.close();
-        }
-    }
-
-
-    @Test
-    public void testSseEventSourceOnEventOnErrorCallback() throws Exception {
-        final CountDownLatch latch = new CountDownLatch(1);
-        final List<InboundSseEvent> results = new ArrayList<InboundSseEvent>();
-        final AtomicInteger errors = new AtomicInteger(0);
-        Client client = ResteasyClientBuilder.newBuilder().scheduledExecutorService(scheduledExecutor).build();
-        try {
-            WebTarget target = client.target(generateURL("/sse/eventssimple"));
-            SseEventSource msgEventSource = SseEventSource.target(target).build();
-            try (SseEventSource eventSource = msgEventSource) {
-                eventSource.register(event -> {
-                    results.add(event);
-                    latch.countDown();
-                }, ex -> {
-                    errors.incrementAndGet();
-                    logger.error(ex.getMessage(), ex);
-                    throw new RuntimeException(ex);
-                });
-                eventSource.open();
-
-                boolean waitResult = latch.await(30, TimeUnit.SECONDS);
-                Assert.assertTrue("Waiting for event to be delivered has timed out.", waitResult);
-            }
             Assert.assertEquals("One message was expected.", 1, results.size());
             Assert.assertThat("The message doesn't have expected content.", "data",
                     CoreMatchers.is(CoreMatchers.equalTo(results.get(0).readData(String.class))));
