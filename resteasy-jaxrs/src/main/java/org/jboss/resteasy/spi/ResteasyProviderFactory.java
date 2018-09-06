@@ -47,8 +47,20 @@ import javax.ws.rs.client.RxInvokerProvider;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicFeature;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.Link;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.Variant;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -67,9 +79,21 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Map.Entry;
 
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -337,15 +361,15 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
 
    private void initializeRegistriesAndFilters(ResteasyProviderFactory parent)
    {
-      serverReaderInterceptorRegistry = parent == null ? new ReaderInterceptorRegistry(this) : parent.serverReaderInterceptorRegistry.clone(this);
-      serverWriterInterceptorRegistry = parent == null ? new WriterInterceptorRegistry(this) : parent.serverWriterInterceptorRegistry.clone(this);
-      containerRequestFilterRegistry = parent == null ? new ContainerRequestFilterRegistry(this): parent.containerRequestFilterRegistry.clone(this);
-      containerResponseFilterRegistry = parent == null ? new ContainerResponseFilterRegistry(this) : parent.containerResponseFilterRegistry.clone(this);
+      serverReaderInterceptorRegistry = parent == null ? new ReaderInterceptorRegistry(this) : parent.getServerReaderInterceptorRegistry().clone(this);
+      serverWriterInterceptorRegistry = parent == null ? new WriterInterceptorRegistry(this) : parent.getServerWriterInterceptorRegistry().clone(this);
+      containerRequestFilterRegistry = parent == null ? new ContainerRequestFilterRegistry(this): parent.getContainerRequestFilterRegistry().clone(this);
+      containerResponseFilterRegistry = parent == null ? new ContainerResponseFilterRegistry(this) : parent.getContainerResponseFilterRegistry().clone(this);
 
-      clientRequestFilterRegistry = parent == null ? new ClientRequestFilterRegistry(this) : parent.clientRequestFilterRegistry.clone(this);
-      clientResponseFilters = parent == null ? new ClientResponseFilterRegistry(this) : parent.clientResponseFilters.clone(this);
-      clientReaderInterceptorRegistry = parent == null ? new ReaderInterceptorRegistry(this) : parent.clientReaderInterceptorRegistry.clone(this);
-      clientWriterInterceptorRegistry = parent == null ? new WriterInterceptorRegistry(this) : parent.clientWriterInterceptorRegistry.clone(this);
+      clientRequestFilterRegistry = parent == null ? new ClientRequestFilterRegistry(this) : parent.getClientRequestFilterRegistry().clone(this);
+      clientResponseFilters = parent == null ? new ClientResponseFilterRegistry(this) : parent.getClientResponseFilters().clone(this);
+      clientReaderInterceptorRegistry = parent == null ? new ReaderInterceptorRegistry(this) : parent.getClientReaderInterceptorRegistry().clone(this);
+      clientWriterInterceptorRegistry = parent == null ? new WriterInterceptorRegistry(this) : parent.getClientWriterInterceptorRegistry().clone(this);
    }
 
    public Set<DynamicFeature> getServerDynamicFeatures()
@@ -2561,18 +2585,7 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
    @Override
    public boolean isEnabled(Feature feature)
    {
-      Collection<Feature> enabled = getEnabledFeatures();
-      //logger.info("********* isEnabled(Feature): " + feature.getClass().getName() + " # enabled: " + enabled.size());
-      for (Feature f : enabled)
-      {
-         //logger.info("  looking at: " + f.getClass());
-         if (f == feature)
-         {
-            //logger.info("   found: " + f.getClass().getName());
-            return true;
-         }
-      }
-      return false;
+      return getEnabledFeatures().contains(feature);
    }
 
    @Override
@@ -2603,12 +2616,7 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
    @Override
    public boolean isRegistered(Class<?> componentClass)
    {
-      if (getProviderClasses().contains(componentClass)) return true;
-      for (Object obj : getProviderInstances())
-      {
-         if (obj.getClass().equals(componentClass)) return true;
-      }
-      return false;
+      return getClassContracts().containsKey(componentClass);
    }
 
    @Override
@@ -2627,13 +2635,19 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
    @Override
    public Set<Class<?>> getClasses()
    {
-      return getProviderClasses();
+      Set<Class<?>> providerClasses = getProviderClasses();
+      return (providerClasses == null || providerClasses.isEmpty())
+            ? Collections.emptySet()
+            : Collections.unmodifiableSet(providerClasses);
    }
 
    @Override
    public Set<Object> getInstances()
    {
-      return getProviderInstances();
+      Set<Object> providerInstances = getProviderInstances();
+      return (providerInstances == null || providerInstances.isEmpty())
+            ? Collections.emptySet()
+            : Collections.unmodifiableSet(providerInstances);
    }
 
    @Override
